@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import { ParseService } from "../services/api.service";
 
+const service = new ParseService();
 export class ApiController {
     health(_req: Request, res: Response) {
         res.status(200).json({
@@ -11,19 +13,14 @@ export class ApiController {
     async parse(req: Request, res: Response) {
         if (!req.file) {
             return res.status(400).json({
-                status: "error",
-                message: "database file is required",
+                error: "database file required",
             });
         }
 
-        // пока просто подтверждаем что файл пришёл
-        return res.status(200).json({
-            status: "ok",
-            message: "database received",
-            meta: {
-                filename: req.file.originalname,
-                size: req.file.size,
-            },
-        });
+        const result = await service.parse(
+            req.file.buffer,
+        );
+
+        return res.json(result);
     }
 }

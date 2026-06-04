@@ -1,15 +1,14 @@
-import { ParseRepository } from "../repositories/api.repository.js";
+import { SqliteRepository } from "../repositories/sqlite.repository";
 
 export class ParseService {
     constructor(
-        private readonly repository: ParseRepository,
+        private readonly repo = new SqliteRepository(),
     ) {}
 
-    async parseDatabase(
-        buffer: Buffer,
-    ): Promise<unknown[]> {
-        return this.repository.parseDatabase(
-            buffer,
-        );
+    async parse(buffer: Buffer) {
+        const raw = await this.repo.dump(buffer);
+
+        // тут потом появится нормализация DTO
+        return raw;
     }
 }
