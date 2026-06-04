@@ -1,8 +1,8 @@
 import { Router } from "express";
 
-import { ParseController } from "../controllers/parse.controller.js";
+import { ParseController } from "../controllers/api.controller.js";
 
-import { uploadDatabase } from "../middlewares/file.middleware.js";
+import { uploadDatabase } from "../middlewares/api.middleware.js";
 
 const router = Router();
 

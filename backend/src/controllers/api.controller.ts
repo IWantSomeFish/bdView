@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { ParseService } from "../services/parse.service.js";
-import { ParseRepository } from "../repositories/parse.repository.js";
+import { ParseService } from "../services/api.service.js";
+import { ParseRepository } from "../repositories/api.repository.js";
 
 const repository = new ParseRepository();
 const service = new ParseService(

@@ -1,4 +1,4 @@
-import { ParseRepository } from "../repositories/parse.repository.js";
+import { ParseRepository } from "../repositories/api.repository.js";
 
 export class ParseService {
     constructor(
