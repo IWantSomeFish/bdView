@@ -1,30 +1,29 @@
 import { Request, Response } from "express";
-import { ParseService } from "../services/api.service.js";
-import { ParseRepository } from "../repositories/api.repository.js";
 
-const repository = new ParseRepository();
-const service = new ParseService(
-    repository,
-);
+export class ApiController {
+    health(_req: Request, res: Response) {
+        res.status(200).json({
+            status: "ok",
+            message: "server is running",
+        });
+    }
 
-export class ParseController {
-    async parse(
-        req: Request,
-        res: Response,
-    ): Promise<void> {
+    async parse(req: Request, res: Response) {
         if (!req.file) {
-            res.status(400).json({
-                error: "Database file missing",
+            return res.status(400).json({
+                status: "error",
+                message: "database file is required",
             });
-
-            return;
         }
 
-        const result =
-            await service.parseDatabase(
-                req.file.buffer,
-            );
-
-        res.json(result);
+        // пока просто подтверждаем что файл пришёл
+        return res.status(200).json({
+            status: "ok",
+            message: "database received",
+            meta: {
+                filename: req.file.originalname,
+                size: req.file.size,
+            },
+        });
     }
 }

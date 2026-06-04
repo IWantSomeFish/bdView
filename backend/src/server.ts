@@ -8,6 +8,7 @@ const PORT = process.env.BACKEND_PORT;
 
 app.listen(PORT, () => {
     console.log(
-        `Server started on ${PORT}`,
+        `Server started on ${PORT}\n`,
+        `http://localhost:${PORT}`,
     );
 });

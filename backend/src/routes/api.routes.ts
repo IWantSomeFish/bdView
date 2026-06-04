@@ -1,14 +1,14 @@
 import { Router } from "express";
-
-import { ParseController } from "../controllers/api.controller.js";
-
-import { uploadDatabase } from "../middlewares/api.middleware.js";
+import { ApiController } from "../controllers/api.controller.js";
+import { uploadDatabase } from "../middlewares/upload.middleware.js";
 
 const router = Router();
+const controller = new ApiController();
 
-const controller =
-    new ParseController();
+// GET healthcheck
+router.get("/health", controller.health.bind(controller));
 
+// POST upload sqlite
 router.post(
     "/parse",
     uploadDatabase.single("database"),
