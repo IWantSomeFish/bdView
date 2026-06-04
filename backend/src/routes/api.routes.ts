@@ -7,7 +7,7 @@ const controller = new ApiController();
 
 // GET healthcheck
 router.get("/health", controller.health.bind(controller));
-
+router.get("/parse", controller.parse.bind(controller));
 // POST upload sqlite
 router.post(
     "/parse",
