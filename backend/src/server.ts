@@ -7,8 +7,6 @@ dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
 const PORT = process.env.BACKEND_PORT;
 
 app.listen(PORT, () => {
-    console.log(
-        `Server started on ${PORT}\n`,
-        `http://localhost:${PORT}`,
-    );
+    console.log(`Server started on ${PORT}`);
+    console.log(`Server healthcheck: http://localhost:${PORT}/api/health`);
 });
