@@ -1,6 +1,6 @@
 import express from "express";
 
-import parseRoutes from "./routes/parse.routes.js";
+import parseRoutes from "./routes/api.routes.js";
 
 export const app = express();
 
