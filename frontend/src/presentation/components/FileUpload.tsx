@@ -39,7 +39,7 @@ const FileUpload: React.FC = () => {
         <div style={{ marginBottom: '15px', fontSize: '14px' }}>
           Выбран файл: <strong>{file.name}</strong>
           <br />
-          Размер: {(file.size / 1024).toFixed(2)} KB
+          Размер: {(file.size / (1024 * 1024)).toFixed(2)} MB
         </div>
       )}
 

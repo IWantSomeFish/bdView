@@ -9,7 +9,12 @@ export function useDatabase() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkHealth()
+    const healthCheckPromise = checkHealth();
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Таймаут: бэкенд не ответил за 10 секунд')), 10000);
+    });
+
+    Promise.race([healthCheckPromise, timeoutPromise])
       .then(() => setBackendOnline(true))
       .catch(() => setBackendOnline(false));
   }, []);

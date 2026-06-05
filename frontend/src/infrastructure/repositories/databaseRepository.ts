@@ -11,5 +11,5 @@ export const uploadDatabase = (file: File): Promise<ParseResult> => {
     .post<ParseResult>('/parse', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
-    .then((res) => res.data);
+    .then((res: { data: any; }) => res.data);
 };
