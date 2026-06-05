@@ -1,4 +1,3 @@
-import { writeFileSync } from "fs";
 import { SqliteRepository } from "../repositories/sqlite.repository";
 
 const REQUIRED_TABLES = [
