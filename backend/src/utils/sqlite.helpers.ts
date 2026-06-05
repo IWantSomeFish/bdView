@@ -1,3 +1,5 @@
+import e from "express";
+
 export function getTables(db: any): string[] {
     const res = db.exec(`
         SELECT name
@@ -13,4 +15,8 @@ export function getTables(db: any): string[] {
 
 export function selectAll(db: any, table: string) {
     return db.exec(`SELECT * FROM "${table}"`);
+}
+
+export function getColumns(info: any[]): string[] {
+    return info.map(row => row.name)
 }
