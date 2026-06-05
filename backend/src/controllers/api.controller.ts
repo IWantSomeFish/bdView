@@ -23,6 +23,9 @@ export class ApiController {
                 });
             }
             const result = await service.parse(req.file.buffer);
+            if (result instanceof Error) {
+                return res.status(400).json({error: "Table validation error"})
+            }
             return res.json(result);
         }
     }
