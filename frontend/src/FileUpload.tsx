@@ -1,10 +1,6 @@
   import React, { useState } from 'react';
   import axios from 'axios';
-  // import dotenv from "dotenv";
-  // import path from "path"
 
-  // dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
-  // const BACKEND_PORT = process.env.BACKEND_PORT;
 
   const FileUpload: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -36,8 +32,7 @@
 
       try {
         const response = await axios.post(
-          // `http://localhost:${BACKEND_PORT}/api/parse`,
-          'http://localhost:8080/api/parse',
+          `http://localhost:8080/api/parse`,
           formData,
           {
             headers: {
