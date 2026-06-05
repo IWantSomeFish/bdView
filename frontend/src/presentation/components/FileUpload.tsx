@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useDatabase } from '../../usecases/useDatabase';
+import PaginatedTable from './PaginatedTable';
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const { backendOnline, uploading, result, error, upload } = useDatabase();
+  const { backendOnline, uploading, result, error, upload, reset } = useDatabase();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files && files.length > 0) setFile(files[0]);
+    if (files && files.length > 0) { setFile(files[0]); reset(); }
   };
 
   const handleUpload = () => {
@@ -17,7 +18,7 @@ const FileUpload: React.FC = () => {
   const disabled = !file || uploading || !backendOnline;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '400px' }}>
+    <div style={{ padding: '20px' }}>
       <h2>Загрузка SQLite базы данных</h2>
 
       {backendOnline === false && (
@@ -63,11 +64,11 @@ const FileUpload: React.FC = () => {
       )}
 
       {result && (
-        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#e9f7ef', border: '1px solid #27ae60', borderRadius: '4px' }}>
-          <h4>Успешно!</h4>
-          <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+        <div style={{ marginTop: '15px' }}>
+          <h4 style={{ color: '#27ae60' }}>✓ База данных загружена</h4>
+          {Object.entries(result).map(([tableName, rows]) => (
+            <PaginatedTable key={tableName} name={tableName} rows={rows as Record<string, unknown>[]} />
+          ))}
         </div>
       )}
     </div>

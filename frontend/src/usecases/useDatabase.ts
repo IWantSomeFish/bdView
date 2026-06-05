@@ -32,5 +32,7 @@ export function useDatabase() {
     }
   };
 
-  return { backendOnline, uploading, result, error, upload };
+  const reset = () => { setResult(null); setError(null); };
+
+  return { backendOnline, uploading, result, error, upload, reset };
 }
