@@ -1,10 +1,8 @@
 import path from "path";
 import { app } from "./app.js";
-import dotenv from "dotenv";
+import { getEnvVariable } from "./utils/env.helper.js";
 
-dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
-
-const PORT = process.env.BACKEND_PORT;
+const PORT = Number(getEnvVariable("BACKEND_PORT"));
 
 app.listen(PORT, () => {
     console.log(`Server started on ${PORT}`);
