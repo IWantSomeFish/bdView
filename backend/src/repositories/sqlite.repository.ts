@@ -3,6 +3,7 @@ import { REQUIRED_COLUMNS, REQUIRED_TABLES } from "../types/api.types.js";
 import { openDatabase } from "../utils/sql.js";
 import { getTables, selectAll } from "../utils/sqlite.helpers.js";
 import { rowsToObjects } from "../utils/sqlite.mappers.js";
+import { ValidationError } from "../middlewares/errors/error.validation.js";
 
 export class SqliteRepository {
     async dump(buffer: Buffer) {
@@ -43,7 +44,7 @@ export class SqliteRepository {
         const missingTables = REQUIRED_TABLES.filter(table => !tables.includes(table));
 
         if (missingTables.length > 0) {
-            throw new Error(`Table validation. Missing following tables: ${missingTables.join(", ")}`)
+            throw new ValidationError(`Required tables are missing:" ${missingTables.join(", ")}`)
         }
     }
     
@@ -53,7 +54,7 @@ export class SqliteRepository {
         const missing = requiredColumns.filter(col => !actualColumns.includes(col));
 
         if (missing.length > 0) {
-            throw new Error(`Columns validation in ${table}. Missing columns: ${missing.join(", ")}`)
+            throw new ValidationError(`Validation in ${table} fall. Next collums are missing:" ${missing.join(", ")}`)
         }
     }
 }
