@@ -1,3 +1,4 @@
+import { Database } from "sql.js";
 import { REQUIRED_COLUMNS, REQUIRED_TABLES } from "../types/api.types.js";
 import { openDatabase } from "../utils/sql.js";
 import { getTables, selectAll } from "../utils/sqlite.helpers.js";
@@ -5,7 +6,7 @@ import { rowsToObjects } from "../utils/sqlite.mappers.js";
 
 export class SqliteRepository {
     async dump(buffer: Buffer) {
-        const db = await openDatabase(buffer);
+        const db: Database = await openDatabase(buffer);
 
         const tables = getTables(db);
         this.validateTables(tables)
