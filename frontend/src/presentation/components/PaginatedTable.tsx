@@ -24,7 +24,7 @@ const PaginatedTable: React.FC<Props> = ({ name, rows }) => {
           <thead>
             <tr>
               {columns.map(col => (
-                <th key={col} style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f0f0f0' }}>
+                <th key={col} style={{ border: '1px solid #ccc', padding: '4px 8px', background: 'var(--bg)' }}>
                   {col}
                 </th>
               ))}
