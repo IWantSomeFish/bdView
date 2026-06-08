@@ -25,6 +25,7 @@ export function useDatabase() {
   const upload = async (file: File) => {
     setUploading(true);
     setError(null);
+    setResult(null);
     try {
       const data = await uploadDatabase(databaseRepository, file);
       setResult(data);
