@@ -1,10 +1,5 @@
 import { SqliteRepository } from "../repositories/sqlite.repository";
-
-const REQUIRED_TABLES = [
-    "routes",
-    "route_segments",
-    "wifi_fingerprints",
-] as const;
+import { REQUIRED_TABLES } from "../types/api.types";
 
 export class ParseService {
     constructor(

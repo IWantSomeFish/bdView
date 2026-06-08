@@ -33,7 +33,7 @@ export class SqliteRepository {
                 res[0].values,
             );
         }
-
+        db.close()
         return result;
     }
 
