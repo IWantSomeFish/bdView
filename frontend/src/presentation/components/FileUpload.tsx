@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDatabase } from '../../usecases/useDatabase';
+import PaginatedTable from './PaginatedTable';
+
+const ACCEPT = ['.sqlite', '.db'];
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
-  const { backendOnline, uploading, result, error, upload } = useDatabase();
+  const [dragging, setDragging] = useState(false);
+  const { backendOnline, uploading, result, error, upload, reset } = useDatabase();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const pickFile = (f: File) => { setFile(f); reset(); };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files && files.length > 0) setFile(files[0]);
+    if (files && files.length > 0) pickFile(files[0]);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setDragging(false);
+    const f = event.dataTransfer.files[0];
+    if (f) pickFile(f);
   };
 
   const handleUpload = () => {
@@ -17,7 +31,7 @@ const FileUpload: React.FC = () => {
   const disabled = !file || uploading || !backendOnline;
 
   return (
-    <div style={{ padding: '20px', maxWidth: '400px' }}>
+    <div style={{ padding: '20px' }}>
       <h2>Загрузка SQLite базы данных</h2>
 
       {backendOnline === false && (
@@ -26,22 +40,36 @@ const FileUpload: React.FC = () => {
         </div>
       )}
 
-      <div style={{ marginBottom: '15px' }}>
+      <div
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={handleDrop}
+        style={{
+          marginBottom: '15px',
+          padding: '30px',
+          border: `2px dashed ${dragging ? '#007bff' : '#aaa'}`,
+          borderRadius: '8px',
+          backgroundColor: dragging ? '#e8f0fe' : '#16171d',
+          textAlign: 'center',
+          cursor: (uploading || !backendOnline) ? 'not-allowed' : 'pointer',
+          transition: 'all 0.15s',
+          userSelect: 'none',
+        }}
+      >
+        {file
+          ? <><strong>{file.name}</strong><br /><span style={{ fontSize: '13px', color: '#555' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</span></>
+          : <span style={{ color: '#666' }}>Перетащите файл сюда или нажмите для выбора<br /><small>(.sqlite, .db)</small></span>
+        }
         <input
+          ref={inputRef}
           type="file"
-          accept=".sqlite,.db"
+          accept={ACCEPT.join(',')}
           onChange={handleFileChange}
           disabled={uploading || !backendOnline}
+          style={{ display: 'none' }}
         />
       </div>
-
-      {file && (
-        <div style={{ marginBottom: '15px', fontSize: '14px' }}>
-          Выбран файл: <strong>{file.name}</strong>
-          <br />
-          Размер: {(file.size / (1024 * 1024)).toFixed(2)} MB
-        </div>
-      )}
 
       <button
         onClick={handleUpload}
@@ -63,11 +91,11 @@ const FileUpload: React.FC = () => {
       )}
 
       {result && (
-        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#e9f7ef', border: '1px solid #27ae60', borderRadius: '4px' }}>
-          <h4>Успешно!</h4>
-          <pre style={{ fontSize: '12px', overflow: 'auto' }}>
-            {JSON.stringify(result, null, 2)}
-          </pre>
+        <div style={{ marginTop: '15px' }}>
+          <h4 style={{ color: '#27ae60' }}>✓ База данных загружена</h4>
+          {Object.entries(result).map(([tableName, rows]) => (
+            <PaginatedTable key={tableName} name={tableName} rows={rows as Record<string, unknown>[]} />
+          ))}
         </div>
       )}
     </div>
