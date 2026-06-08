@@ -21,7 +21,7 @@ export class ParseService {
         // тут потом появится нормализация DTO
         return result;
         } catch (e) {
-            return new Error("Tables validation error");
+            return e
         }
     }
 }
