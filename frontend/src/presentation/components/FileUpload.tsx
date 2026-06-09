@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useState, useRef } from 'react';
 import { useDatabase } from '../hooks/useDatabase';
 import PaginatedTable from './PaginatedTable';
@@ -7,16 +6,6 @@ import ErrorMessage from './ErrorMessage';
 const ACCEPT = ['.sqlite', '.db'];
 
 const isValidFile = (f: File) => ACCEPT.some(ext => f.name.endsWith(ext));
-||||||| 0eccf4e
-import React, { useState } from 'react';
-import { useDatabase } from '../../usecases/useDatabase';
-=======
-import React, { useState, useRef } from 'react';
-import { useDatabase } from '../../usecases/useDatabase';
-import PaginatedTable from './PaginatedTable';
-
-const ACCEPT = ['.sqlite', '.db'];
->>>>>>> master
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -28,7 +17,6 @@ const FileUpload: React.FC = () => {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-<<<<<<< HEAD
     if (files && files.length > 0) pickFile(files[0]);
   };
 
@@ -37,18 +25,6 @@ const FileUpload: React.FC = () => {
     setDragging(false);
     const f = event.dataTransfer.files[0];
     if (f && isValidFile(f)) pickFile(f);
-||||||| 0eccf4e
-    if (files && files.length > 0) setFile(files[0]);
-=======
-    if (files && files.length > 0) pickFile(files[0]);
-  };
-
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
-    setDragging(false);
-    const f = event.dataTransfer.files[0];
-    if (f) pickFile(f);
->>>>>>> master
   };
 
   const handleUpload = () => {
@@ -65,31 +41,6 @@ const FileUpload: React.FC = () => {
         <ErrorMessage message="Backend недоступен. Загрузка файла невозможна." />
       )}
 
-<<<<<<< HEAD
-  <div
-    onClick={() => inputRef.current?.click()}
-    onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-    onDragLeave={() => setDragging(false)}
-    onDrop={handleDrop}
-    style={{
-      marginBottom: '15px',
-      padding: '30px',
-      border: `2px dashed ${dragging ? '#007bff' : '#aaa'}`,
-      borderRadius: '8px',
-      backgroundColor: dragging ? '#e8f0fe' : 'var(--bg)',
-      textAlign: 'center',
-      cursor: (uploading || !backendOnline) ? 'not-allowed' : 'pointer',
-      transition: 'all 0.15s',
-      userSelect: 'none',
-    }}
-  >
-    {file
-      ? <><strong>{file.name}</strong><br /><span style={{ fontSize: '13px', color: '#555' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</span></>
-      : <span style={{ color: '#666' }}>Перетащите файл сюда или нажмите для выбора<br /><small>(.sqlite, .db)</small></span>
-    }
-||||||| 0eccf4e
-      <div style={{ marginBottom: '15px' }}>
-=======
       <div
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -100,7 +51,7 @@ const FileUpload: React.FC = () => {
           padding: '30px',
           border: `2px dashed ${dragging ? '#007bff' : '#aaa'}`,
           borderRadius: '8px',
-          backgroundColor: dragging ? '#e8f0fe' : '#16171d',
+          backgroundColor: dragging ? '#e8f0fe' : 'var(--bg)',
           textAlign: 'center',
           cursor: (uploading || !backendOnline) ? 'not-allowed' : 'pointer',
           transition: 'all 0.15s',
@@ -111,7 +62,6 @@ const FileUpload: React.FC = () => {
           ? <><strong>{file.name}</strong><br /><span style={{ fontSize: '13px', color: '#555' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</span></>
           : <span style={{ color: '#666' }}>Перетащите файл сюда или нажмите для выбора<br /><small>(.sqlite, .db)</small></span>
         }
->>>>>>> master
         <input
           ref={inputRef}
           type="file"
@@ -148,7 +98,7 @@ const FileUpload: React.FC = () => {
         </div>
       )}
     </div>
-    );
+  );
 };
 
-    export default FileUpload;
+export default FileUpload;
