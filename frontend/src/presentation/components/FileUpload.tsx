@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { useDatabase } from '../../usecases/useDatabase';
+import { useDatabase } from '../hooks/useDatabase';
 import PaginatedTable from './PaginatedTable';
+import ErrorMessage from './ErrorMessage';
 
 const ACCEPT = ['.sqlite', '.db'];
+
+const isValidFile = (f: File) => ACCEPT.some(ext => f.name.endsWith(ext));
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -21,7 +24,7 @@ const FileUpload: React.FC = () => {
     event.preventDefault();
     setDragging(false);
     const f = event.dataTransfer.files[0];
-    if (f) pickFile(f);
+    if (f && isValidFile(f)) pickFile(f);
   };
 
   const handleUpload = () => {
@@ -35,9 +38,7 @@ const FileUpload: React.FC = () => {
       <h2>Загрузка SQLite базы данных</h2>
 
       {backendOnline === false && (
-        <div style={{ color: 'red', marginBottom: '15px' }}>
-          ⚠ Backend недоступен. Загрузка файла невозможна.
-        </div>
+        <ErrorMessage message="Backend недоступен. Загрузка файла невозможна." />
       )}
 
       <div
@@ -50,7 +51,7 @@ const FileUpload: React.FC = () => {
           padding: '30px',
           border: `2px dashed ${dragging ? '#007bff' : '#aaa'}`,
           borderRadius: '8px',
-          backgroundColor: dragging ? '#e8f0fe' : '#16171d',
+          backgroundColor: dragging ? '#e8f0fe' : 'var(--bg)',
           textAlign: 'center',
           cursor: (uploading || !backendOnline) ? 'not-allowed' : 'pointer',
           transition: 'all 0.15s',
@@ -86,9 +87,7 @@ const FileUpload: React.FC = () => {
         {uploading ? 'Загрузка...' : 'Загрузить базу данных'}
       </button>
 
-      {error && (
-        <div style={{ color: 'red', marginTop: '15px' }}>Ошибка: {error}</div>
-      )}
+      {error && <ErrorMessage message={error} />}
 
       {result && (
         <div style={{ marginTop: '15px' }}>
