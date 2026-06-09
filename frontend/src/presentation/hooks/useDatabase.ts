@@ -40,7 +40,6 @@ export function useDatabase() {
 
   useEffect(() => {
     checkHealth();
-    // Восстановление данных при возврате по кнопке браузера (back/forward)
     const handlePageShow = () => {
       const saved = loadFromSession();
       if (saved) setResult(saved);
