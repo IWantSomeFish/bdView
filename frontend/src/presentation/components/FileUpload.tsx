@@ -14,6 +14,11 @@ const FileUpload: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pickFile = (f: File) => { setFile(f); reset(); };
+  const [dragging, setDragging] = useState(false);
+  const { backendOnline, uploading, result, error, upload, reset } = useDatabase();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const pickFile = (f: File) => { setFile(f); reset(); };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -95,10 +100,15 @@ const FileUpload: React.FC = () => {
           {Object.entries(result).map(([tableName, rows]) => (
             <PaginatedTable key={tableName} name={tableName} rows={rows as Record<string, unknown>[]} />
           ))}
-        </div>
+          <div style={{ marginTop: '15px' }}>
+            <h4 style={{ color: '#27ae60' }}>✓ База данных загружена</h4>
+            {Object.entries(result).map(([tableName, rows]) => (
+              <PaginatedTable key={tableName} name={tableName} rows={rows as Record<string, unknown>[]} />
+            ))}
+          </div>
       )}
-    </div>
-  );
+        </div>
+      );
 };
 
-export default FileUpload;
+      export default FileUpload;
