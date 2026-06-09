@@ -35,10 +35,18 @@ export function useDatabase() {
   const checkHealth = useCallback(async () => {
     const online = await checkBackendHealth(databaseRepository);
     setBackendOnline(online);
+    return online;
   }, []);
 
   useEffect(() => {
     checkHealth();
+    // Восстановление данных при возврате по кнопке браузера (back/forward)
+    const handlePageShow = () => {
+      const saved = loadFromSession();
+      if (saved) setResult(saved);
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, [checkHealth]);
 
   const upload = async (file: File) => {
@@ -46,14 +54,11 @@ export function useDatabase() {
     setError(null);
     setResult(null);
     clearSession();
-    if (!backendOnline) {
-      const online = await checkBackendHealth(databaseRepository);
-      setBackendOnline(online);
-      if (!online) {
-        setError('Backend недоступен');
-        setUploading(false);
-        return;
-      }
+    const online = await checkHealth();
+    if (!online) {
+      setError('Backend недоступен');
+      setUploading(false);
+      return;
     }
     try {
       const data = await uploadDatabase(databaseRepository, file);
