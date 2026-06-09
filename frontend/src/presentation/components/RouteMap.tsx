@@ -18,14 +18,14 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
   const { center, fingerprints, segmentColors } = useMemo(() => {
     if (!selectedRoute) return { center: [56.9932, 40.9809] as [number, number], fingerprints: [], segmentColors: {} };
 
-    const segments = selectedSegmentId 
+    const segments = selectedSegmentId
       ? selectedRoute.routeSegments.filter(s => s.segmentId === selectedSegmentId)
       : selectedRoute.routeSegments;
 
     const fps = segments
       .flatMap((seg) => seg.wifiFingerprints)
       .filter((fp) => typeof fp.latitude === 'number' && typeof fp.longitude === 'number' && !isNaN(fp.latitude) && !isNaN(fp.longitude));
-    
+
     const colors: Record<string, string> = {};
     selectedRoute.routeSegments.forEach((seg, i) => {
       colors[seg.segmentId] = COLORS[i % COLORS.length];
@@ -58,8 +58,17 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
   if (!selectedRoute) return <p>Нет маршрутов для отображения</p>;
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <div style={{ marginBottom: '15px', border: '1px solid var(--border)', borderRadius: '4px', padding: '10px' }}>
+    <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+      {/* Левая панель - список маршрутов */}
+      <div style={{
+        width: '300px',
+        flexShrink: 0,
+        border: '1px solid var(--border)',
+        borderRadius: '4px',
+        padding: '10px',
+        maxHeight: '610px',
+        overflowY: 'auto'
+      }}>
         {routes.map((route) => {
           const isExpanded = expandedRoutes.has(route.routeId);
           const isRouteSelected = route.routeId === selectedRouteId;
@@ -142,34 +151,37 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
         })}
       </div>
 
-      <div style={{ marginBottom: '10px', fontSize: '14px' }}>
-        <strong>{selectedRoute.name || selectedRoute.routeId}</strong>
-        {selectedSegmentId && ` → ${selectedRoute.routeSegments.find(s => s.segmentId === selectedSegmentId)?.name || selectedSegmentId}`}
-        {' — '}{fingerprints.length} точек WiFi
-      </div>
+      {/* Правая панель - карта */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginBottom: '10px', fontSize: '14px' }}>
+          <strong>{selectedRoute.name || selectedRoute.routeId}</strong>
+          {selectedSegmentId && ` → ${selectedRoute.routeSegments.find(s => s.segmentId === selectedSegmentId)?.name || selectedSegmentId}`}
+          {' — '}{fingerprints.length} точек WiFi
+        </div>
 
-      <MapContainer center={center} zoom={14} style={{ height: '500px', width: '100%', borderRadius: '8px' }}>
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        />
-        {fingerprints.map((fp) => (
-          <CircleMarker
-            key={fp.fingerprintId}
-            center={[fp.latitude, fp.longitude]}
-            radius={4}
-            pathOptions={{ color: segmentColors[fp.segmentId] || '#999', fillOpacity: 0.7, weight: 1 }}
-          >
-            <Tooltip>
-              <strong>{fp.ssid}</strong>
-              <br />
-              Сигнал: {fp.signalDbm} dBm
-              <br />
-              Сегмент: {fp.segmentId}
-            </Tooltip>
-          </CircleMarker>
-        ))}
-      </MapContainer>
+        <MapContainer center={center} zoom={14} style={{ height: '600px', width: '100%', borderRadius: '8px' }}>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
+          {fingerprints.map((fp) => (
+            <CircleMarker
+              key={fp.fingerprintId}
+              center={[fp.latitude, fp.longitude]}
+              radius={4}
+              pathOptions={{ color: segmentColors[fp.segmentId] || '#999', fillOpacity: 0.7, weight: 1 }}
+            >
+              <Tooltip>
+                <strong>{fp.ssid}</strong>
+                <br />
+                Сигнал: {fp.signalDbm} dBm
+                <br />
+                Сегмент: {fp.segmentId}
+              </Tooltip>
+            </CircleMarker>
+          ))}
+        </MapContainer>
+      </div>
     </div>
   );
 };
