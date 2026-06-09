@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useDatabase } from '../hooks/useDatabase';
 import PaginatedTable from './PaginatedTable';
 import ErrorMessage from './ErrorMessage';
+import RouteMap from './RouteMap';
 
 const ACCEPT = ['.sqlite', '.db'];
 
@@ -91,9 +92,14 @@ const FileUpload: React.FC = () => {
 
       {result && (
         <div style={{ marginTop: '15px' }}>
-          <h4 style={{ color: '#27ae60' }}>✓ База данных загружена</h4>
-          {Object.entries(result).map(([tableName, rows]) => (
-            <PaginatedTable key={tableName} name={tableName} rows={rows as Record<string, unknown>[]} />
+          <h4 style={{ color: '#27ae60' }}>✓ База данных загружена ({result.length} маршрутов)</h4>
+          <RouteMap routes={result} />
+          {result.map((route) => (
+            <PaginatedTable
+              key={route.routeId}
+              name={route.name || route.routeId}
+              rows={route.routeSegments.map(({ wifiFingerprints: _, ...seg }) => seg as Record<string, unknown>)}
+            />
           ))}
         </div>
       )}
