@@ -12,6 +12,7 @@
     "dev:npm": "npm run dev --workspace=backend & npm run dev --workspace=frontend"
   },
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "@types/axios": "^0.14.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -24,6 +25,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "h3-js": "^4.4.0",
     "multer": "^2.1.1",
     "node": "^26.3.0",
     "react": "^19.2.7",
