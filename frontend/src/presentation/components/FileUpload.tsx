@@ -98,7 +98,7 @@ const FileUpload: React.FC = () => {
             <PaginatedTable
               key={route.routeId}
               name={route.name || route.routeId}
-              rows={route.routeSegments.map(({ wifiFingerprints: _, ...seg }) => seg as Record<string, unknown>)}
+              rows={route.routeSegments.map(({ calibrations: _, ...seg }) => seg as Record<string, unknown>)}
             />
           ))}
         </div>
