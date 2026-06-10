@@ -1,16 +1,31 @@
-export interface WifiFingerprint {
-  fingerprintId: string;
+export interface RawCalibrationSnapshot {
+  snapshotId: string;
+  calibrationRunId: string;
   routeId: string;
   segmentId: string;
-  calibrationRunId: string;
-  ssid: string;
-  bssid: string;
-  signalDbm: number;
-  latitude: number;
-  longitude: number;
-  floorLevel: number | null;
   recordedAt: number;
-  confidence: number;
+  wifiNetworksJson: string;
+  gpsLatitude: number;
+  gpsLongitude: number;
+  gpsAccuracy: number | null;
+  gpsSpeed: number | null;
+  gpsTimestamp: number | null;
+  wasRecordedToMainTable: number;
+  gpsQuality: string | null;
+  notes: string | null;
+}
+
+export interface CalibrationRun {
+  runId: string;
+  routeId: string;
+  segmentId: string;
+  startedAtMillis: number;
+  finishedAtMillis: number;
+  operator: string | null;
+  notes: string | null;
+  source: string | null;
+  isActive: number;
+  snapshotPoints: RawCalibrationSnapshot[];
 }
 
 export interface RouteSegment {
@@ -24,7 +39,7 @@ export interface RouteSegment {
   updatedAt: number;
   name: string;
   isReturn: number;
-  wifiFingerprints: WifiFingerprint[];
+  calibrations: CalibrationRun[];
 }
 
 export interface Route {

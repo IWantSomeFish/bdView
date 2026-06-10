@@ -11,40 +11,50 @@ const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'
 const RouteMap: React.FC<Props> = ({ routes }) => {
   const [selectedRouteId, setSelectedRouteId] = useState(routes[0]?.routeId);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
+  const [selectedCalibrationId, setSelectedCalibrationId] = useState<string | null>(null);
   const [expandedRoutes, setExpandedRoutes] = useState<Set<string>>(new Set([routes[0]?.routeId]));
+  const [expandedSegments, setExpandedSegments] = useState<Set<string>>(new Set());
 
   const selectedRoute = routes.find((r) => r.routeId === selectedRouteId);
 
   const { center, fingerprints, segmentColors, segmentPaths } = useMemo(() => {
     if (!selectedRoute) return { center: [56.9932, 40.9809] as [number, number], fingerprints: [], segmentColors: {}, segmentPaths: [] };
 
-    const segments = selectedSegmentId
+    let segments = selectedSegmentId
       ? selectedRoute.routeSegments.filter(s => s.segmentId === selectedSegmentId)
       : selectedRoute.routeSegments;
 
+    // Если выбрана калибровка — фильтруем
+    if (selectedCalibrationId) {
+      segments = segments.map(seg => ({
+        ...seg,
+        calibrations: seg.calibrations?.filter(c => c.runId === selectedCalibrationId) ?? []
+      }));
+    }
+
     const fps = segments
-      .flatMap((seg) => seg.wifiFingerprints)
-      .filter((fp) => typeof fp.latitude === 'number' && typeof fp.longitude === 'number' && !isNaN(fp.latitude) && !isNaN(fp.longitude));
+      .flatMap((seg) => (seg.calibrations ?? []).flatMap(cal => cal.snapshotPoints ?? []))
+      .filter((fp) => typeof fp.gpsLatitude === 'number' && typeof fp.gpsLongitude === 'number' && !isNaN(fp.gpsLatitude) && !isNaN(fp.gpsLongitude));
 
     const colors: Record<string, string> = {};
     selectedRoute.routeSegments.forEach((seg, i) => {
       colors[seg.segmentId] = COLORS[i % COLORS.length];
     });
 
-    const c: [number, number] = fps.length > 0 ? [fps[0].latitude, fps[0].longitude] : [56.9932, 40.9809];
+    const c: [number, number] = fps.length > 0 ? [fps[0].gpsLatitude, fps[0].gpsLongitude] : [56.9932, 40.9809];
 
     const paths = segments.flatMap(seg => {
-      const sorted = seg.wifiFingerprints
-        .filter(fp => typeof fp.latitude === 'number' && typeof fp.longitude === 'number' && !isNaN(fp.latitude) && !isNaN(fp.longitude))
+      const sorted = (seg.calibrations ?? [])
+        .flatMap(cal => cal.snapshotPoints ?? [])
+        .filter(fp => typeof fp.gpsLatitude === 'number' && typeof fp.gpsLongitude === 'number' && !isNaN(fp.gpsLatitude) && !isNaN(fp.gpsLongitude))
         .sort((a, b) => a.recordedAt - b.recordedAt);
-      
+
       if (sorted.length < 2) return [];
-      
-      // Разбиваем на группы по времени (если перерыв > 5 минут — новая линия)
-      const MAX_GAP_MS = 5 * 60 * 1000; // 5 минут
+
+      const MAX_GAP_MS = 5 * 60 * 1000;
       const groups: typeof sorted[] = [];
       let currentGroup: typeof sorted = [sorted[0]];
-      
+
       for (let i = 1; i < sorted.length; i++) {
         const timeDiff = sorted[i].recordedAt - sorted[i - 1].recordedAt;
         if (timeDiff > MAX_GAP_MS) {
@@ -55,22 +65,18 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
         }
       }
       groups.push(currentGroup);
-      
-      console.log(`Segment ${seg.name || seg.segmentId}: ${sorted.length} points → ${groups.length} continuous lines`);
-      
+
       return groups
         .filter(g => g.length > 1)
         .map((group, idx) => ({
           segmentId: `${seg.segmentId}-${idx}`,
           color: colors[seg.segmentId],
-          points: group.map(fp => [fp.latitude, fp.longitude] as [number, number])
+          points: group.map(fp => [fp.gpsLatitude, fp.gpsLongitude] as [number, number])
         }));
     });
 
-    console.log(`Rendering ${paths.length} polylines`);
-
     return { center: c, fingerprints: fps, segmentColors: colors, segmentPaths: paths };
-  }, [selectedRoute, selectedSegmentId]);
+  }, [selectedRoute, selectedSegmentId, selectedCalibrationId]);
 
   const toggleRoute = (routeId: string) => {
     const newExpanded = new Set(expandedRoutes);
@@ -82,21 +88,38 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
     setExpandedRoutes(newExpanded);
   };
 
+  const toggleSegment = (segmentId: string) => {
+    const newExpanded = new Set(expandedSegments);
+    if (newExpanded.has(segmentId)) {
+      newExpanded.delete(segmentId);
+    } else {
+      newExpanded.add(segmentId);
+    }
+    setExpandedSegments(newExpanded);
+  };
+
   const selectRoute = (routeId: string) => {
     setSelectedRouteId(routeId);
     setSelectedSegmentId(null);
+    setSelectedCalibrationId(null);
   };
 
   const selectSegment = (routeId: string, segmentId: string | null) => {
     setSelectedRouteId(routeId);
     setSelectedSegmentId(segmentId);
+    setSelectedCalibrationId(null);
+  };
+
+  const selectCalibration = (routeId: string, segmentId: string, calibrationId: string) => {
+    setSelectedRouteId(routeId);
+    setSelectedSegmentId(segmentId);
+    setSelectedCalibrationId(calibrationId);
   };
 
   if (!selectedRoute) return <p>Нет маршрутов для отображения</p>;
 
   return (
     <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
-      {/* Левая панель - список маршрутов */}
       <div style={{
         width: '300px',
         flexShrink: 0,
@@ -156,28 +179,69 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
                       marginBottom: '2px'
                     }}
                   >
-                    ✓ Весь маршрут ({route.routeSegments.reduce((sum, s) => sum + s.wifiFingerprints.length, 0)} точек)
+                    ✓ Весь маршрут ({route.routeSegments.reduce((sum, s) => sum + (s.calibrations?.reduce((cSum, c) => cSum + (c.snapshotPoints?.length ?? 0), 0) ?? 0), 0)} точек)
                   </div>
                   {route.routeSegments.map((seg) => {
-                    const isSegmentSelected = isRouteSelected && selectedSegmentId === seg.segmentId;
+                    const isSegmentSelected = isRouteSelected && selectedSegmentId === seg.segmentId && !selectedCalibrationId;
+                    const isSegmentExpanded = expandedSegments.has(seg.segmentId);
                     return (
-                      <div
-                        key={seg.segmentId}
-                        onClick={() => selectSegment(route.routeId, seg.segmentId)}
-                        style={{
-                          padding: '4px 8px',
-                          cursor: 'pointer',
-                          background: isSegmentSelected ? '#e3f2fd' : 'transparent',
-                          borderRadius: '3px',
-                          fontSize: '13px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          marginBottom: '2px'
-                        }}
-                      >
-                        <div style={{ width: '10px', height: '10px', backgroundColor: segmentColors[seg.segmentId], borderRadius: '50%' }} />
-                        {seg.name || seg.segmentId} ({seg.wifiFingerprints.length} точек)
+                      <div key={seg.segmentId} style={{ marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            onClick={() => toggleSegment(seg.segmentId)}
+                            style={{
+                              width: '16px',
+                              height: '16px',
+                              border: '1px solid #999',
+                              background: 'transparent',
+                              cursor: 'pointer',
+                              fontSize: '10px',
+                              padding: 0
+                            }}
+                          >
+                            {isSegmentExpanded ? '−' : '+'}
+                          </button>
+                          <div
+                            onClick={() => selectSegment(route.routeId, seg.segmentId)}
+                            style={{
+                              flex: 1,
+                              padding: '4px 8px',
+                              cursor: 'pointer',
+                              background: isSegmentSelected ? '#e3f2fd' : 'transparent',
+                              borderRadius: '3px',
+                              fontSize: '13px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
+                            <div style={{ width: '10px', height: '10px', backgroundColor: segmentColors[seg.segmentId], borderRadius: '50%' }} />
+                            {seg.name || seg.segmentId} ({(seg.calibrations?.reduce((sum, c) => sum + (c.snapshotPoints?.length ?? 0), 0) ?? 0)} точек)
+                          </div>
+                        </div>
+                        {isSegmentExpanded && (
+                          <div style={{ marginLeft: '20px', marginTop: '2px' }}>
+                            {(seg.calibrations ?? []).map((cal) => {
+                              const isCalSelected = isRouteSelected && selectedSegmentId === seg.segmentId && selectedCalibrationId === cal.runId;
+                              return (
+                                <div
+                                  key={cal.runId}
+                                  onClick={() => selectCalibration(route.routeId, seg.segmentId, cal.runId)}
+                                  style={{
+                                    padding: '3px 6px',
+                                    cursor: 'pointer',
+                                    background: isCalSelected ? '#e3f2fd' : 'transparent',
+                                    borderRadius: '3px',
+                                    fontSize: '12px',
+                                    marginBottom: '1px'
+                                  }}
+                                >
+                                  {new Date(cal.startedAtMillis).toLocaleDateString()} ({cal.snapshotPoints?.length ?? 0} точек)
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -188,12 +252,12 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
         })}
       </div>
 
-      {/* Правая панель - карта */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ marginBottom: '10px', fontSize: '14px' }}>
           <strong>{selectedRoute.name || selectedRoute.routeId}</strong>
           {selectedSegmentId && ` → ${selectedRoute.routeSegments.find(s => s.segmentId === selectedSegmentId)?.name || selectedSegmentId}`}
-          {' — '}{fingerprints.length} точек WiFi
+          {selectedCalibrationId && ` → Калибровка ${new Date(selectedRoute.routeSegments.find(s => s.segmentId === selectedSegmentId)?.calibrations?.find(c => c.runId === selectedCalibrationId)?.startedAtMillis ?? 0).toLocaleDateString()}`}
+          {' — '}{fingerprints.length} точек GPS
         </div>
 
         <MapContainer center={center} zoom={14} style={{ height: '600px', width: '100%', borderRadius: '8px' }}>
@@ -210,17 +274,17 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
           ))}
           {fingerprints.map((fp) => (
             <CircleMarker
-              key={fp.fingerprintId}
-              center={[fp.latitude, fp.longitude]}
+              key={fp.snapshotId}
+              center={[fp.gpsLatitude, fp.gpsLongitude]}
               radius={4}
               pathOptions={{ color: segmentColors[fp.segmentId] || '#999', fillOpacity: 0.7, weight: 1 }}
             >
               <Tooltip>
-                <strong>{fp.ssid}</strong>
+                <strong>Snapshot</strong>
                 <br />
-                Сигнал: {fp.signalDbm} dBm
+                Точность GPS: {fp.gpsAccuracy ? `${fp.gpsAccuracy.toFixed(1)}m` : 'N/A'}
                 <br />
-                Сегмент: {fp.segmentId}
+                Время: {new Date(fp.recordedAt).toLocaleString()}
               </Tooltip>
             </CircleMarker>
           ))}
