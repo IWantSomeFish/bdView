@@ -35,7 +35,7 @@ export const REQUIRED_COLUMNS = {
         "segmentId",
         "startedAtMillis",
         "finishedAtMillis",
-        "operatior",
+        "operator",
         "notes",
         "source",
         "isActive",
