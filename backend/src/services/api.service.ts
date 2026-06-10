@@ -15,24 +15,31 @@ export class ParseService {
         }
         const routes = tables.routes as any[];
         const routeSegments = tables.route_segments as any[];
-        const wifiFingerprints = tables.wifi_fingerprints as any[];
+        const calibrations = tables.calibration_runs as any[];
+        const snapshots = tables.raw_calibration_snapshots as any[];
 
-        const segmentsWithWifi = connectTables(
+        const calibrationsWithSnapshots = connectTables(
+            calibrations,
+            snapshots,
+            "runId",
+            "calibrationRunId",
+            "snapshotPoints"
+        )
+        const segmentsCalibrations = connectTables(
             routeSegments,
-            wifiFingerprints,
+            calibrationsWithSnapshots,
             "segmentId",
             "segmentId",
-            "wifiFingerprints",
+            "calibrations",
         );
 
         const routesWithSegments = connectTables(
             routes,
-            segmentsWithWifi,
+            segmentsCalibrations,
             "routeId",
             "routeId",
             "routeSegments",
         );
-        // console.log(routesWithSegments[1].routeSegments)
         return routesWithSegments;
     }
 }
