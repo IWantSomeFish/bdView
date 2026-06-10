@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, Polyline } from 'react-leaflet';
 import type { Route } from '../../domain/types';
 
 interface Props {
@@ -15,8 +15,8 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
 
   const selectedRoute = routes.find((r) => r.routeId === selectedRouteId);
 
-  const { center, fingerprints, segmentColors } = useMemo(() => {
-    if (!selectedRoute) return { center: [56.9932, 40.9809] as [number, number], fingerprints: [], segmentColors: {} };
+  const { center, fingerprints, segmentColors, segmentPaths } = useMemo(() => {
+    if (!selectedRoute) return { center: [56.9932, 40.9809] as [number, number], fingerprints: [], segmentColors: {}, segmentPaths: [] };
 
     const segments = selectedSegmentId
       ? selectedRoute.routeSegments.filter(s => s.segmentId === selectedSegmentId)
@@ -32,7 +32,19 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
     });
 
     const c: [number, number] = fps.length > 0 ? [fps[0].latitude, fps[0].longitude] : [56.9932, 40.9809];
-    return { center: c, fingerprints: fps, segmentColors: colors };
+
+    const paths = segments.map(seg => {
+      const points = seg.wifiFingerprints
+        .filter(fp => typeof fp.latitude === 'number' && typeof fp.longitude === 'number' && !isNaN(fp.latitude) && !isNaN(fp.longitude))
+        .sort((a, b) => a.recordedAt - b.recordedAt)
+        .map(fp => [fp.latitude, fp.longitude] as [number, number]);
+      console.log(`Segment ${seg.name || seg.segmentId}: ${points.length} valid points`);
+      return { segmentId: seg.segmentId, points };
+    }).filter(p => p.points.length > 1);
+
+    console.log(`Rendering ${paths.length} polylines`);
+
+    return { center: c, fingerprints: fps, segmentColors: colors, segmentPaths: paths };
   }, [selectedRoute, selectedSegmentId]);
 
   const toggleRoute = (routeId: string) => {
@@ -164,6 +176,13 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
+          {segmentPaths.map((path) => (
+            <Polyline
+              key={path.segmentId}
+              positions={path.points}
+              pathOptions={{ color: segmentColors[path.segmentId] || '#999', weight: 3, opacity: 0.8 }}
+            />
+          ))}
           {fingerprints.map((fp) => (
             <CircleMarker
               key={fp.fingerprintId}
