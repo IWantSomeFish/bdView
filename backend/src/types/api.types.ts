@@ -1,7 +1,8 @@
 export const REQUIRED_TABLES = [
     "routes",
     "route_segments",
-    "wifi_fingerprints",
+    "calibration_runs",
+    "raw_calibration_snapshots"
 ] as const;
 
 export const REQUIRED_COLUMNS = {
@@ -28,18 +29,31 @@ export const REQUIRED_COLUMNS = {
         "name",
         "isReturn"
       ],
-    wifi_fingerprints: [
-        "fingerprintId",
+    calibration_runs: [
+        "runId",
         "routeId",
         "segmentId",
+        "startedAtMillis",
+        "finishedAtMillis",
+        "operatior",
+        "notes",
+        "source",
+        "isActive",
+    ],
+    raw_calibration_snapshots: [
+        "snapshotId",
         "calibrationRunId",
-        "ssid",
-        "bssid",
-        "signalDbm",
-        "latitude",
-        "longitude",
-        "floorLevel",
+        "routeId",
+        "segmentId",
         "recordedAt",
-        "confidence"
+        "wifiNetworksJson",
+        "gpsLatitude",
+        "gpsLongitude",
+        "gpsAccuracy",
+        "gpsSpeed",
+        "gpsTimestamp",
+        "wasRecordedToMainTable",
+        "gpsQuality",
+        "notes"
     ]
 }
