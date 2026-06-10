@@ -33,14 +33,39 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
 
     const c: [number, number] = fps.length > 0 ? [fps[0].latitude, fps[0].longitude] : [56.9932, 40.9809];
 
-    const paths = segments.map(seg => {
-      const points = seg.wifiFingerprints
+    const paths = segments.flatMap(seg => {
+      const sorted = seg.wifiFingerprints
         .filter(fp => typeof fp.latitude === 'number' && typeof fp.longitude === 'number' && !isNaN(fp.latitude) && !isNaN(fp.longitude))
-        .sort((a, b) => a.recordedAt - b.recordedAt)
-        .map(fp => [fp.latitude, fp.longitude] as [number, number]);
-      console.log(`Segment ${seg.name || seg.segmentId}: ${points.length} valid points`);
-      return { segmentId: seg.segmentId, points };
-    }).filter(p => p.points.length > 1);
+        .sort((a, b) => a.recordedAt - b.recordedAt);
+      
+      if (sorted.length < 2) return [];
+      
+      // Разбиваем на группы по времени (если перерыв > 5 минут — новая линия)
+      const MAX_GAP_MS = 5 * 60 * 1000; // 5 минут
+      const groups: typeof sorted[] = [];
+      let currentGroup: typeof sorted = [sorted[0]];
+      
+      for (let i = 1; i < sorted.length; i++) {
+        const timeDiff = sorted[i].recordedAt - sorted[i - 1].recordedAt;
+        if (timeDiff > MAX_GAP_MS) {
+          groups.push(currentGroup);
+          currentGroup = [sorted[i]];
+        } else {
+          currentGroup.push(sorted[i]);
+        }
+      }
+      groups.push(currentGroup);
+      
+      console.log(`Segment ${seg.name || seg.segmentId}: ${sorted.length} points → ${groups.length} continuous lines`);
+      
+      return groups
+        .filter(g => g.length > 1)
+        .map((group, idx) => ({
+          segmentId: `${seg.segmentId}-${idx}`,
+          color: colors[seg.segmentId],
+          points: group.map(fp => [fp.latitude, fp.longitude] as [number, number])
+        }));
+    });
 
     console.log(`Rendering ${paths.length} polylines`);
 
@@ -180,7 +205,7 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
             <Polyline
               key={path.segmentId}
               positions={path.points}
-              pathOptions={{ color: segmentColors[path.segmentId] || '#999', weight: 3, opacity: 0.8 }}
+              pathOptions={{ color: path.color || '#999', weight: 3, opacity: 0.8 }}
             />
           ))}
           {fingerprints.map((fp) => (
