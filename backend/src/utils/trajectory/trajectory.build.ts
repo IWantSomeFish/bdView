@@ -1,13 +1,9 @@
 import { latLngToCell } from "h3-js";
 import { H3Trajectory } from "./trajectory.types";
 
-export function runToH3Trajectory(run: Record<string, any>,resolution = 11): H3Trajectory | null {
+export function runToH3Trajectory(run: Record<string, any>,resolution = 11): H3Trajectory | null{
 
-    if (run.source !== "MANUAL") {
-        return null;
-    }
-
-    const points = run["snapshotPoints"];
+    const points = run.points;
 
     if (!points || points.length === 0) {
         return null;

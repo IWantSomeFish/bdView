@@ -4,3 +4,26 @@ export type H3Trajectory = {
     segmentId: string;
     points: string[];
 };
+
+export type TokenizedTrajectory = {
+    runId: string;
+    routeId: string;
+    segmentId: string;
+
+    tokenIds: number[];
+};
+
+export type ModelSample = {
+    runId: string;
+    routeId: string;
+    segmentId: string;
+
+    inputIds: number[];
+    attentionMask: number[];
+};
+
+export type TripletBatch = {
+    anchor: ModelSample;
+    positive: ModelSample;
+    negative: ModelSample;
+};
