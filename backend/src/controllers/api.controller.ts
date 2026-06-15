@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import { ParseService } from "../services/api.service";
+import { ModelService } from "../services/model.service";
 
 const service = new ParseService();
+const model = new ModelService();
 export class ApiController {
     async health(_req: Request, res: Response) {
         res.status(200).json({
@@ -23,6 +25,7 @@ export class ApiController {
                 });
             }
             const result = await service.parse(req.file.buffer);
+            model.canonizeRoute(result);
             if (result instanceof Error) {
                 return res.status(400).json({error: `${result}`})
             }
