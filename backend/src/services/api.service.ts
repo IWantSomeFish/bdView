@@ -29,10 +29,12 @@ export class mainService {
         saveJSON(canonicalRouters)
         const result = await this.parser.parse(this.repo.cloneAsAutoOptimized(rawDB,canonicalRouters))
         saveJSON(result)
+        
         return result
     }
 
     async tokenizeRoutes(dataSheets: any[]): Promise<ModelSample[]> {
+
         const calibrations: H3Trajectory[] = extractCalibrations(dataSheets)
         const trajectories: H3Trajectory[] =  calibrations.map(data => runToH3Trajectory(data)).filter((x): x is H3Trajectory => x !== null)
         const tokenizedTrajectories: TokenizedTrajectory[] = trajectories.map(trajectory => this.tokenizer.tokenizeTrajectory(trajectory))
@@ -48,7 +50,6 @@ export class mainService {
         const clusters = cluster(sim, 0.85)
         const objectClusters = clusters.map(cluster =>cluster.map(i => dataset[i]));
         const canonical = objectClusters.map(cluster => ({canonical: selectCanonicalSample(cluster, vocabSize),cluster}))
-        saveJSON(canonical)
 
         return canonical
     }
