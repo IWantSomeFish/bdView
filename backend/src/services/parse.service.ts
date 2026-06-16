@@ -6,8 +6,7 @@ export class ParseService {
         private readonly repo = new SqliteRepository(),
     ) { }
 
-    async parse(buffer: Buffer) {
-        const raw = await this.repo.dump(buffer);
+    async parse(raw: any) {
         const tables: Record<string, unknown> = {};
 
         for (const table of REQUIRED_TABLES) {
