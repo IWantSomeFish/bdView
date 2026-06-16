@@ -15,6 +15,6 @@ export async function checkBackendHealth(repo: IDatabaseRepository): Promise<boo
   }
 }
 
-export async function uploadDatabase(repo: IDatabaseRepository, file: File): Promise<ParseResult> {
-  return repo.uploadDatabase(file);
+export async function uploadDatabase(repo: IDatabaseRepository, file: File, optimize: boolean): Promise<ParseResult> {
+  return repo.uploadDatabase(file, optimize);
 }

@@ -7,9 +7,10 @@ export class DatabaseRepository implements IDatabaseRepository {
     return apiClient.get('/health').then(() => undefined);
   }
 
-  uploadDatabase(file: File): Promise<ParseResult> {
+  uploadDatabase(file: File, optimize: boolean): Promise<ParseResult> {
     const formData = new FormData();
     formData.append('database', file);
+    formData.append('optimize', String(optimize));
     return apiClient
       .post<ParseResult>('/parse', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
