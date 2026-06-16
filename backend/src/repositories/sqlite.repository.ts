@@ -57,4 +57,21 @@ export class SqliteRepository {
             throw new ValidationError(`Validation in ${table} fall. Next collums are missing:" ${missing.join(", ")}`)
         }
     }
+
+    cloneAsAutoOptimized(rawDB: any, runId: string) {
+
+        const original = rawDB.routes.find(
+            (r: any) => r.runId === runId
+        );
+
+        if (!original) return;
+
+        const clone = {
+            ...original,
+            runId: crypto.randomUUID(), // новый PK
+            SOURCE: "AUTO_OPTIMIZED",
+        };
+
+        rawDB.routes.push(clone);
+}
 }
