@@ -1,35 +1,42 @@
 import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
 import { DatasetBuilder } from "../utils/trajectory/trajectory.datasetBuilder";
-import { PairBuilder } from "../utils/trajectory/trajectory.pairBuilder";
-import { TokenSimilarityService } from "../utils/trajectory/trajectory.similiraty";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 import { H3Trajectory, ModelSample, TokenizedTrajectory } from "../utils/trajectory/trajectory.types";
+import { ClusterService } from "./clustering.service";
+import { InferenceService } from "./inference.service";
+import * as tf from "@tensorflow/tfjs"
+import { MedoidService } from "./medoid.service";
+import { cosineSimilarity } from "../utils/trajectory/trajectory.similiraty";
 
 export class ModelService {
     constructor(
         private readonly tokenizer = new H3Tokenizer(),
         private readonly datasetBuilder = new DatasetBuilder(),
-        private readonly pairBuilder = new PairBuilder(new TokenSimilarityService),
+        private inference: InferenceService,
+        private readonly clusterService = new ClusterService(75),
+        private readonly mediodService = new MedoidService((a, b) => cosineSimilarity(a, b))
     ) {
     }
 
-    async canonizeRoute(parsedDatabase: any[]) {
-        const calibrations: any[] = this.extractCalibrations(parsedDatabase);
-        const calibH3: H3Trajectory[] = []
-        for (const calib of calibrations) {
-            const c = runToH3Trajectory(calib)
-            if (c) {
-                calibH3.push(c)
-            }
-
-        }
-        const tokenizedCalibs: TokenizedTrajectory[] = calibH3.map(run => this.tokenizer.tokenizeTrajectory(run))
-        const dataset: ModelSample[] = this.datasetBuilder.buildBatch(tokenizedCalibs);
-        const triplets = this.pairBuilder.build(dataset);
-        console.log(triplets)
+    async init() {
+        const model = await tf.loadLayersModel("file://./models/route-encoder")
+        this.inference = new InferenceService(model);
     }
+    async canonizeRoute(parsedDatabase: any[]) {
+        const calibrations: any[] = extractCalibrations(parsedDatabase);
+        const trajectories: H3Trajectory[] = calibrations.map(runToH3Trajectory).filter((x): x is H3Trajectory => x !== null);
+        const tokenized: TokenizedTrajectory[] = trajectories.map(t => this.tokenizer.tokenizeTrajectory(t));
+        const samples: ModelSample[] = this.datasetBuilder.buildBatch(tokenized);
 
-    extractCalibrations(routes: any[]): H3Trajectory[] {
+        const embeddings = await Promise.all(samples.map(s => this.inference.encode(s)));
+        const clusters = this.clusterService.cluster(embeddings);
+        const canonicalRoutes = this.mediodService.select(clusters, samples,embeddings);
+
+    return canonicalRoutes;
+    }
+}
+
+export function extractCalibrations(routes: any[]): H3Trajectory[] {
     const runs: H3Trajectory[] = [];
 
     for (const route of routes) {
@@ -51,5 +58,4 @@ export class ModelService {
     }
 
     return runs; 
-    }
 }
