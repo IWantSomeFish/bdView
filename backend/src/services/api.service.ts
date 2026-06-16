@@ -26,10 +26,9 @@ export class mainService {
         const tokens = await this.tokenizeRoutes(parsed)
         const canonicalClusters = await this.clusteriseRoutes(tokens,Number(getEnvVariable("MAX_SEQUENCE_LENGTH")))
         const canonicalRouters = canonicalClusters.map(c => c.canonical);
-        for (const sample of canonicalRouters) {
-            await this.repo.cloneAsAutoOptimized(rawDB, sample.runId);
-        }
-        const result = await this.parser.parse(rawDB)
+        saveJSON(canonicalRouters)
+        const result = await this.parser.parse(this.repo.cloneAsAutoOptimized(rawDB,canonicalRouters))
+        saveJSON(result)
         return result
     }
 

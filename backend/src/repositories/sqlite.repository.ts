@@ -58,10 +58,11 @@ export class SqliteRepository {
         }
     }
 
-    cloneAsAutoOptimized(rawDB: any, runId: string) {
-
-        const original = rawDB.routes.find(
-            (r: any) => r.runId === runId
+    cloneAsAutoOptimized(rawDB: any, canonicalRouters: any) {
+        for (const sample of canonicalRouters) {
+        
+        const original = rawDB.calibration_runs.find(
+            (r: any) => r.runId === sample.runId
         );
 
         if (!original) return;
@@ -69,9 +70,13 @@ export class SqliteRepository {
         const clone = {
             ...original,
             runId: crypto.randomUUID(), // новый PK
-            SOURCE: "AUTO_OPTIMIZED",
+            source: "AUTO_OPTIMIZED",
+            original_calib: sample.runId
+            
         };
 
-        rawDB.routes.push(clone);
+        rawDB["calibration_runs"].push(clone);
+    }
+        return rawDB
 }
 }
