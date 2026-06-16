@@ -11,6 +11,7 @@ const isValidFile = (f: File) => ACCEPT.some(ext => f.name.endsWith(ext));
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [optimize, setOptimize] = useState(false);
   const { backendOnline, uploading, result, error, upload, reset } = useDatabase();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +30,7 @@ const FileUpload: React.FC = () => {
   };
 
   const handleUpload = () => {
-    if (file) upload(file);
+    if (file) upload(file, optimize);
   };
 
   const disabled = !file || uploading || !backendOnline;
@@ -72,6 +73,16 @@ const FileUpload: React.FC = () => {
           style={{ display: 'none' }}
         />
       </div>
+
+      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px', fontSize: '14px', cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={optimize}
+          onChange={(e) => setOptimize(e.target.checked)}
+          disabled={uploading}
+        />
+        Оптимизировать маршрут
+      </label>
 
       <button
         onClick={handleUpload}

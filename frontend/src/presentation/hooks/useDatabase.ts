@@ -19,7 +19,7 @@ export function useDatabase() {
     checkHealth();
   }, [checkHealth]);
 
-  const upload = async (file: File) => {
+  const upload = async (file: File, optimize: boolean) => {
     setUploading(true);
     setError(null);
     setResult(null);
@@ -30,7 +30,7 @@ export function useDatabase() {
       return;
     }
     try {
-      const data = await uploadDatabase(databaseRepository, file);
+      const data = await uploadDatabase(databaseRepository, file, optimize);
       setResult(data);
     } catch (err: unknown) {
       const message =
