@@ -21,9 +21,3 @@ export type ModelSample = {
     inputIds: number[];
     attentionMask: number[];
 };
-
-export type TripletBatch = {
-    anchor: ModelSample;
-    positive: ModelSample;
-    negative: ModelSample;
-};
