@@ -1,8 +1,10 @@
 import { SqliteRepository } from "../repositories/sqlite.repository";
+import { REQUIRED_TABLES } from "../types/api.types";
 import { extractCalibrations } from "../utils/helpers.extractCalibs";
 import { saveJSON } from "../utils/helpers.saveJSON";
 import { ConnectedComponentsService } from "../utils/model/model.components";
 import { SimilarityGraphBuilder } from "../utils/model/model.graphBuilder";
+import { CalibrationGroup } from "../utils/model/model.types";
 import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
 import { DatasetBuilder } from "../utils/trajectory/trajectory.datasetBuilder";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
@@ -24,7 +26,7 @@ export class mainService {
         const rawDB = await this.repo.dump(buffer);
         const parsed = await this.parser.parse(rawDB);
         const tokens = await this.tokenizeRoutes(parsed);
-        const result = await this.group.group(tokens,0.95);
+        const result = await this.buildOutput(rawDB,await this.group.group(tokens,0.95));
         saveJSON(result)
         return parsed
     }
@@ -37,5 +39,68 @@ export class mainService {
         const dataSet: ModelSample[] = this.builder.buildBatch(tokenizedTrajectories);
 
         return dataSet
+    }
+
+    async buildOutput(database: any, routeGroups: CalibrationGroup[]) {
+
+        const tables: Record<string, unknown> = {};
+        for (const table of REQUIRED_TABLES) {tables[table] = database[table] ?? []}
+        const routes = tables.routes as any[];
+        const routeSegments = tables.route_segments as any[];
+        const calibrations_table = tables.calibration_runs as any[];
+        const result = [];
+
+        for (const [index, group] of routeGroups.entries()) {
+
+            const routeResult: {id: number, routes: any[]} = {id: index + 1, routes: []};
+            const listedElements: string[] = []
+            for (const calibration of group.calibrations) {
+                const routeExists = routes.find(route => route.routeId === calibration.routeId,);
+
+                if (!routeExists) {continue}
+
+                if (!listedElements.includes(calibration.routeId)) {
+                    listedElements.push(calibration.routeId);
+                    routeResult.routes.push({
+                        ...routeExists,
+                        segments: [],
+                    });
+                }           
+            }
+            listedElements.length = 0;
+            for (const calibration of group.calibrations) {
+                const segmentExists = routeSegments.find(segment => segment.segmentId === calibration.segmentId)
+                if (!segmentExists) {continue}
+
+                if(!listedElements.includes(calibration.segmentId)) {
+                    listedElements.push(calibration.segmentId)
+                    const route = routeResult.routes.find(route => route.routeId === calibration.routeId)
+                    if (!route) {continue}
+                    route.segments.push({
+                        ...segmentExists,
+                        calibrations: []
+                    })
+                }
+            }
+            listedElements.length = 0;
+            for(const calibration of group.calibrations) {
+                const calibrationExists = calibrations_table.find(calib => calib.runId === calibration.runId)
+                if (!calibrationExists) {continue}
+
+                if(!listedElements.includes(calibration.runId)){
+                    listedElements.push(calibration.runId)
+                    const route = routeResult.routes.find(route => route.routeId === calibration.routeId)
+                    if (!route) {continue}
+                    const segment = route.segments.find((segment: { segmentId: string; }) => segment.segmentId === calibration.segmentId)
+                    if(!segment) {continue}
+                    segment.calibrations.push({
+                        ...calibrationExists
+                    })
+                }
+            }
+            result.push(routeResult);
+        }
+
+    return result;
     }
 }
