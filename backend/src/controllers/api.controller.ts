@@ -26,4 +26,17 @@ export class ApiController {
             return res.json(result);
         }
     }
+
+    async getSimilar(req: Request, res: Response) {
+        if (req.method === "POST") {
+            if (!req.file) {
+                return res.status(400).json({
+                    error: "database file required",
+                })
+            }
+            const parsedDB = await service.getRoutes(req.file.buffer);
+            const result = await service.getSimilar(parsedDB,req.file.buffer);
+            return res.json(result);
+        }
+    }
 }

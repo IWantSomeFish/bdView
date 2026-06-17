@@ -23,15 +23,21 @@ export class mainService {
         ) {}
 
     async getRoutes(buffer: Buffer): Promise<any[]> {
+
         const rawDB = await this.repo.dump(buffer);
-        const parsed = await this.parser.parse(rawDB);
-        const tokens = await this.tokenizeRoutes(parsed);
-        const result = await this.buildOutput(rawDB,await this.group.group(tokens,0.95));
-        saveJSON(result)
-        return parsed
+        const result = await this.parser.parse(rawDB);
+
+        return result
     }
 
-    async tokenizeRoutes(dataSheets: any[]): Promise<ModelSample[]> {
+    async getSimilar(parsedDB: any[],buffer: Buffer): Promise<any[]> {
+        const rawDB = await this.repo.dump(buffer);
+        const tokens = await this.tokenizeRoutes(parsedDB);
+        const result = await this.buildOutput(rawDB,await this.group.group(tokens,0.95));
+
+        return result
+    }
+    private async tokenizeRoutes(dataSheets: any[]): Promise<ModelSample[]> {
 
         const calibrations: H3Trajectory[] = extractCalibrations(dataSheets);
         const trajectories: H3Trajectory[] =  calibrations.map(data => runToH3Trajectory(data)).filter((x): x is H3Trajectory => x !== null);
@@ -41,7 +47,7 @@ export class mainService {
         return dataSet
     }
 
-    async buildOutput(database: any, routeGroups: CalibrationGroup[]) {
+    private async buildOutput(database: any, routeGroups: CalibrationGroup[]) {
 
         const tables: Record<string, unknown> = {};
         for (const table of REQUIRED_TABLES) {tables[table] = database[table] ?? []}
