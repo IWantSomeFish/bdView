@@ -1,5 +1,5 @@
 import type { IDatabaseRepository } from '../domain/IDatabaseRepository';
-import type { ParseResult } from '../domain/types';
+import type { ParseResult, SimilarResult } from '../domain/types';
 
 const HEALTH_TIMEOUT_MS = 10000;
 
@@ -15,6 +15,10 @@ export async function checkBackendHealth(repo: IDatabaseRepository): Promise<boo
   }
 }
 
-export async function uploadDatabase(repo: IDatabaseRepository, file: File, optimize: boolean): Promise<ParseResult> {
-  return repo.uploadDatabase(file, optimize);
+export async function uploadDatabase(repo: IDatabaseRepository, file: File): Promise<ParseResult> {
+  return repo.uploadDatabase(file);
+}
+
+export async function uploadSimilar(repo: IDatabaseRepository, file: File): Promise<SimilarResult> {
+  return repo.uploadSimilar(file);
 }

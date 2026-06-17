@@ -57,3 +57,35 @@ export interface Route {
 }
 
 export type ParseResult = Route[];
+
+// /similar response types
+export interface SimilarCalibration {
+  runId: string;
+  routeId: string;
+  segmentId: string;
+  startedAtMillis: number;
+  finishedAtMillis: number;
+  source: string | null;
+  isActive: number;
+}
+
+export interface SimilarSegment {
+  segmentId: string;
+  routeId: string;
+  name: string;
+  isReturn: number;
+  calibrations: SimilarCalibration[];
+}
+
+export interface SimilarRoute {
+  routeId: string;
+  name: string;
+  segments: SimilarSegment[];
+}
+
+export interface SimilarGroup {
+  id: number;
+  routes: SimilarRoute[];
+}
+
+export type SimilarResult = SimilarGroup[];
