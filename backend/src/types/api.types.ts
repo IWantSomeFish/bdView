@@ -1,3 +1,5 @@
+import { H3Trajectory } from "../utils/trajectory/trajectory.types";
+
 export const REQUIRED_TABLES = [
     "routes",
     "route_segments",
@@ -58,34 +60,20 @@ export const REQUIRED_COLUMNS = {
     ]
 }
 
-export type CalibrationRef = {
-    runId: string;
-    routeId: string;
-    segmentId: string;
+export type RouteGroup = {
+    number: number;
 
-    similarityScore?: number;
+    routes: GroupedRoute[];
 };
 
-export type CalibrationGroup = {
-    id: string;
-
-    calibrations: CalibrationRef[];
-}
-
-type DisplaySegment = {
-    segmentId: string;
-
-    calibrations: CalibrationRef[];
-};
-
-type DisplayRoute = {
+export type GroupedRoute = {
     routeId: string;
 
-    segments: DisplaySegment[];
+    segments: GroupedSegment[];
 };
 
-type DisplayRouteGroup = {
-    id: string;
+export type GroupedSegment = {
+    segmentId: string;
 
-    routes: DisplayRoute[];
+    calibrations: H3Trajectory[];
 };
