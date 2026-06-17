@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import { ParseService } from "../services/api.service";
-import { trainModel } from "../services/training.service";
-import { extractCalibrations } from "../services/model.service";
+import { mainService } from "../services/api.service";
 
-const service = new ParseService();
+const service = new mainService();
 export class ApiController {
     async health(_req: Request, res: Response) {
         res.status(200).json({
@@ -24,11 +22,20 @@ export class ApiController {
                     error: "database file required",
                 });
             }
-            const result = await service.parse(req.file.buffer);
-            trainModel(extractCalibrations(result))
-            if (result instanceof Error) {
-                return res.status(400).json({error: `${result}`})
+            const result = await service.getRoutes(req.file.buffer);
+            return res.json(result);
+        }
+    }
+
+    async getSimilar(req: Request, res: Response) {
+        if (req.method === "POST") {
+            if (!req.file) {
+                return res.status(400).json({
+                    error: "database file required",
+                })
             }
+            const parsedDB = await service.getRoutes(req.file.buffer);
+            const result = await service.getSimilar(parsedDB,req.file.buffer);
             return res.json(result);
         }
     }
