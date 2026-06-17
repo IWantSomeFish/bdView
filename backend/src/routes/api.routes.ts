@@ -15,4 +15,9 @@ router.post(
     controller.parse.bind(controller),
 );
 
+router.post("/similar",
+    uploadDatabase.single("database"),
+    controller.getSimilar.bind(controller)
+);
+
 export default router;
