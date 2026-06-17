@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDatabase } from '../hooks/useDatabase';
-import PaginatedTable from './PaginatedTable';
 import ErrorMessage from './ErrorMessage';
-import RouteMap from './RouteMap';
 
 const ACCEPT = ['.sqlite', '.db'];
 
@@ -14,6 +13,7 @@ const FileUpload: React.FC = () => {
   const [optimize, setOptimize] = useState(false);
   const { backendOnline, uploading, result, error, upload, reset } = useDatabase();
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const pickFile = (f: File) => { setFile(f); reset(); };
 
@@ -104,14 +104,12 @@ const FileUpload: React.FC = () => {
       {result && (
         <div style={{ marginTop: '15px' }}>
           <h4 style={{ color: '#27ae60' }}>✓ База данных загружена ({result.length} маршрутов)</h4>
-          <RouteMap routes={result} />
-          {result.map((route) => (
-            <PaginatedTable
-              key={route.routeId}
-              name={route.name || route.routeId}
-              rows={route.routeSegments.map(({ calibrations: _, ...seg }) => seg as Record<string, unknown>)}
-            />
-          ))}
+          <button
+            onClick={() => navigate('/routes', { state: { result } })}
+            style={{ padding: '10px 20px', backgroundColor: '#27ae60', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Перейти к маршрутам →
+          </button>
         </div>
       )}
     </div>

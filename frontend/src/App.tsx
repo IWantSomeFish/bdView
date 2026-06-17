@@ -1,10 +1,14 @@
-import FileUpload from './presentation/components/FileUpload';
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import UploadPage from './presentation/pages/UploadPage';
+import RoutesPage from './presentation/pages/RoutesPage';
 
 function App() {
   return (
-    <div className="App">
-      <FileUpload />
-    </div>
+    <Routes>
+      <Route path="/" element={<UploadPage />} />
+      <Route path="/routes" element={<RoutesPage />} />
+    </Routes>
   );
 }
 
