@@ -57,3 +57,35 @@ export const REQUIRED_COLUMNS = {
         "notes"
     ]
 }
+
+export type CalibrationRef = {
+    runId: string;
+    routeId: string;
+    segmentId: string;
+
+    similarityScore?: number;
+};
+
+export type CalibrationGroup = {
+    id: string;
+
+    calibrations: CalibrationRef[];
+}
+
+type DisplaySegment = {
+    segmentId: string;
+
+    calibrations: CalibrationRef[];
+};
+
+type DisplayRoute = {
+    routeId: string;
+
+    segments: DisplaySegment[];
+};
+
+type DisplayRouteGroup = {
+    id: string;
+
+    routes: DisplayRoute[];
+};

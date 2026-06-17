@@ -1,10 +1,7 @@
-import { SqliteRepository } from "../repositories/sqlite.repository";
 import { REQUIRED_TABLES } from "../types/api.types";
 
 export class ParseService {
-    constructor(
-        private readonly repo = new SqliteRepository(),
-    ) { }
+    constructor() { }
 
     async parse(raw: any) {
         const tables: Record<string, unknown> = {};
