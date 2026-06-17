@@ -221,7 +221,14 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
                         </div>
                         {isSegmentExpanded && (
                           <div style={{ marginLeft: '20px', marginTop: '2px' }}>
-                            {(seg.calibrations ?? []).map((cal) => {
+                            {(seg.calibrations ?? [])
+                              .slice()
+                              .sort((a, b) => {
+                                if (a.source === 'AUTO_OPTIMIZED' && b.source !== 'AUTO_OPTIMIZED') return -1;
+                                if (a.source !== 'AUTO_OPTIMIZED' && b.source === 'AUTO_OPTIMIZED') return 1;
+                                return 0;
+                              })
+                              .map((cal) => {
                               const isCalSelected = isRouteSelected && selectedSegmentId === seg.segmentId && selectedCalibrationId === cal.runId;
                               return (
                                 <div

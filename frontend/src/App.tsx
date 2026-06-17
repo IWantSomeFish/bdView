@@ -1,3 +1,4 @@
+import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import UploadPage from './presentation/pages/UploadPage';
 import RoutesPage from './presentation/pages/RoutesPage';
