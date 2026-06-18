@@ -8,6 +8,11 @@ interface Props {
 
 const COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22'];
 
+const SOURCE_LABELS: Record<string, string> = {
+  'MANUAL': 'Ручная',
+  'AUTO_OPTIMIZED': 'Авто',
+};
+
 const RouteMap: React.FC<Props> = ({ routes }) => {
   const [selectedRouteId, setSelectedRouteId] = useState(routes[0]?.routeId);
   const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null);
@@ -33,7 +38,9 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
     }
 
     const fps = segments
-      .flatMap((seg) => (seg.calibrations ?? []).flatMap(cal => cal.snapshotPoints ?? []))
+      .flatMap((seg) => (seg.calibrations ?? []).flatMap(cal =>
+        (cal.snapshotPoints ?? []).map(fp => ({ ...fp, _source: cal.source }))
+      ))
       .filter((fp) => typeof fp.gpsLatitude === 'number' && typeof fp.gpsLongitude === 'number' && !isNaN(fp.gpsLatitude) && !isNaN(fp.gpsLongitude));
 
     const colors: Record<string, string> = {};
@@ -243,7 +250,12 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
                                     marginBottom: '1px'
                                   }}
                                 >
-                                  {new Date(cal.startedAtMillis).toLocaleDateString()} — {cal.source ?? 'N/A'} ({cal.snapshotPoints?.length ?? 0} точек)
+                                  {cal.source === 'AUTO_OPTIMIZED' && (
+                                    <span style={{ backgroundColor: '#2ecc71', color: 'white', borderRadius: '3px', padding: '1px 5px', fontSize: '10px', marginRight: '5px' }}>
+                                      ✦ Оптимальный
+                                    </span>
+                                  )}
+                                  {new Date(cal.startedAtMillis).toLocaleDateString()} — {SOURCE_LABELS[cal.source ?? ''] ?? cal.source} ({cal.snapshotPoints?.length ?? 0} точек)
                                 </div>
                               );
                             })}
@@ -295,6 +307,8 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
               pathOptions={{ color: segmentColors[fp.segmentId] || '#999', fillOpacity: 0.7, weight: 1 }}
             >
               <Tooltip>
+                <strong>{SOURCE_LABELS[fp._source ?? ''] ?? fp._source ?? 'Неизвестно'}</strong>
+                <br />
                 Точность GPS: {fp.gpsAccuracy ? `${fp.gpsAccuracy.toFixed(1)}m` : 'N/A'}
                 <br />
                 Время: {new Date(fp.recordedAt).toLocaleString()}

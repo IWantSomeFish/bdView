@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDatabase } from '../hooks/useDatabase';
 import RouteMap from './RouteMap';
+import SimilarMap from './SimilarMap';
 import ErrorMessage from './ErrorMessage';
 
 const ACCEPT = ['.sqlite', '.db'];
@@ -12,7 +12,6 @@ const FileUpload: React.FC = () => {
   const [dragging, setDragging] = useState(false);
   const { backendOnline, uploading, result, similarResult, error, upload, similar, reset } = useDatabase();
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
 
   const pickFile = (f: File) => { setFile(f); reset(); };
 
@@ -83,24 +82,17 @@ const FileUpload: React.FC = () => {
 
       {error && <ErrorMessage message={error} />}
 
-      {/* /parse — карта прямо здесь */}
-      {result && (
+      {result && !similarResult && (
         <div style={{ marginTop: '15px' }}>
           <h4 style={{ color: '#27ae60' }}>✓ База данных загружена ({result.length} маршрутов)</h4>
           <RouteMap routes={result} />
         </div>
       )}
 
-      {/* /similar — переход на отдельную страницу */}
-      {similarResult && (
+      {result && similarResult && (
         <div style={{ marginTop: '15px' }}>
           <h4 style={{ color: '#8e44ad' }}>✓ Найдено {similarResult.length} групп похожих маршрутов</h4>
-          <button
-            onClick={() => navigate('/routes', { state: { similarResult } })}
-            style={{ padding: '10px 20px', backgroundColor: '#8e44ad', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            Просмотреть группы →
-          </button>
+          <SimilarMap routes={result} groups={similarResult} />
         </div>
       )}
     </div>
