@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { databaseRepository } from '../../infrastructure/repositories/DatabaseRepository';
-import { checkBackendHealth, uploadDatabase, uploadSimilar } from '../../usecases/database';
+import { checkBackendHealth, loadRoutes, findSimilarRoutes } from '../../usecases/database';
 import type { ParseResult, SimilarResult } from '../../domain/types';
 
 export function useDatabase() {
@@ -13,7 +13,6 @@ export function useDatabase() {
   const checkHealth = useCallback(async () => {
     const online = await checkBackendHealth(databaseRepository);
     setBackendOnline(online);
-    return online;
   }, []);
 
   useEffect(() => {
@@ -21,26 +20,17 @@ export function useDatabase() {
   }, [checkHealth]);
 
   const upload = async (file: File) => {
-    if (result) {
-      // /parse уже был выполнен
-      setSimilarResult(null);
-      setError(null);
-      return;
-    }
+    if (result) { setSimilarResult(null); setError(null); return; }
     setUploading(true);
     setError(null);
-    setSimilarResult(null);
-    const online = await checkHealth();
-    if (!online) {
-      setError('Backend недоступен');
-      setUploading(false);
-      return;
-    }
     try {
-      const data = await uploadDatabase(databaseRepository, file);
+      const data = await loadRoutes(databaseRepository, file);
       setResult(data);
+      setBackendOnline(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки файла');
+      const message = err instanceof Error ? err.message : 'Ошибка загрузки файла';
+      setError(message);
+      if (message === 'Backend недоступен') setBackendOnline(false);
     } finally {
       setUploading(false);
     }
@@ -50,22 +40,18 @@ export function useDatabase() {
     setUploading(true);
     setError(null);
     setSimilarResult(null);
-    const online = await checkHealth();
-    if (!online) {
-      setError('Backend недоступен');
-      setUploading(false);
-      return;
-    }
     try {
-      // Используем уже загруженный result или запрашиваем заново
       const [parseData, similarData] = await Promise.all([
-        result ? Promise.resolve(result) : uploadDatabase(databaseRepository, file),
-        uploadSimilar(databaseRepository, file),
+        result ? Promise.resolve(result) : loadRoutes(databaseRepository, file),
+        findSimilarRoutes(databaseRepository, file),
       ]);
       setResult(parseData);
       setSimilarResult(similarData);
+      setBackendOnline(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Ошибка анализа похожих маршрутов');
+      const message = err instanceof Error ? err.message : 'Ошибка анализа похожих маршрутов';
+      setError(message);
+      if (message === 'Backend недоступен') setBackendOnline(false);
     } finally {
       setUploading(false);
     }
