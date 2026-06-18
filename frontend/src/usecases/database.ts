@@ -15,10 +15,14 @@ export async function checkBackendHealth(repo: IDatabaseRepository): Promise<boo
   }
 }
 
-export async function uploadDatabase(repo: IDatabaseRepository, file: File): Promise<ParseResult> {
+export async function loadRoutes(repo: IDatabaseRepository, file: File): Promise<ParseResult> {
+  const online = await checkBackendHealth(repo);
+  if (!online) throw new Error('Backend недоступен');
   return repo.uploadDatabase(file);
 }
 
-export async function uploadSimilar(repo: IDatabaseRepository, file: File): Promise<SimilarResult> {
+export async function findSimilarRoutes(repo: IDatabaseRepository, file: File): Promise<SimilarResult> {
+  const online = await checkBackendHealth(repo);
+  if (!online) throw new Error('Backend недоступен');
   return repo.uploadSimilar(file);
 }
