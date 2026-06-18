@@ -1,5 +1,5 @@
-import { getEnvVariable } from "../env.helper";
-import { TokenizedTrajectory,ModelSample } from "./trajectory.types";
+import { getEnvVariable } from "../utils/env.helper";
+import { TokenizedTrajectory,ModelSample } from "../utils/trajectory/trajectory.types";
 
 export class DatasetBuilder {
     constructor(

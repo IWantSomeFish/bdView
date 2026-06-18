@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { mainService } from "../services/api.service";
+import { MainService } from "../services/api.service";
 
-const service = new mainService();
+const service = new MainService();
 export class ApiController {
     async health(_req: Request, res: Response) {
         res.status(200).json({
@@ -34,9 +34,16 @@ export class ApiController {
                     error: "database file required",
                 })
             }
-            const parsedDB = await service.getRoutes(req.file.buffer);
-            const result = await service.getSimilar(parsedDB,req.file.buffer);
-            return res.json(result);
+        }
+    }
+
+    async train(req: Request, res: Response) {
+        if(req.method === "POST") {
+            if (!req.file) {
+                return res.status(400).json({
+                    error: "database file required",
+                })
+            }
         }
     }
 }
