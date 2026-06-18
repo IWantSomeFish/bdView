@@ -1,44 +1,42 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDatabase } from '../hooks/useDatabase';
+import RouteMap from './RouteMap';
+import SimilarMap from './SimilarMap';
 import ErrorMessage from './ErrorMessage';
 
 const ACCEPT = ['.sqlite', '.db'];
-
 const isValidFile = (f: File) => ACCEPT.some(ext => f.name.endsWith(ext));
-
-const btnStyle = (disabled: boolean, color: string): React.CSSProperties => ({
-  padding: '10px 20px',
-  backgroundColor: disabled ? '#ccc' : color,
-  color: 'white',
-  border: 'none',
-  borderRadius: '4px',
-  cursor: disabled ? 'not-allowed' : 'pointer',
-});
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [optimize, setOptimize] = useState(false);
   const { backendOnline, uploading, result, similarResult, error, upload, similar, reset } = useDatabase();
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
 
   const pickFile = (f: File) => { setFile(f); reset(); };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
     if (files && files.length > 0) pickFile(files[0]);
   };
 
-  const handleDrop = (event: React.DragEvent) => {
-    event.preventDefault();
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
     setDragging(false);
-    const f = event.dataTransfer.files[0];
+    const f = e.dataTransfer.files[0];
     if (f && isValidFile(f)) pickFile(f);
   };
 
   const disabled = !file || uploading || !backendOnline;
+
+  const btnStyle = (color: string): React.CSSProperties => ({
+    padding: '10px 20px',
+    backgroundColor: disabled ? '#ccc' : color,
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+  });
 
   return (
     <div style={{ padding: '20px' }}>
@@ -69,66 +67,32 @@ const FileUpload: React.FC = () => {
           ? <><strong>{file.name}</strong><br /><span style={{ fontSize: '13px', color: '#555' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</span></>
           : <span style={{ color: '#666' }}>Перетащите файл сюда или нажмите для выбора<br /><small>(.sqlite, .db)</small></span>
         }
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPT.join(',')}
-          onChange={handleFileChange}
-          disabled={uploading || !backendOnline}
-          style={{ display: 'none' }}
-        />
+        <input ref={inputRef} type="file" accept={ACCEPT.join(',')} onChange={handleFileChange}
+          disabled={uploading || !backendOnline} style={{ display: 'none' }} />
       </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', fontSize: '14px', cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={optimize}
-          onChange={(e) => setOptimize(e.target.checked)}
-          disabled={uploading}
-        />
-        Оптимизировать маршрут
-      </label>
-
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button
-          onClick={() => file && upload(file, optimize)}
-          disabled={disabled}
-          style={btnStyle(disabled, '#007bff')}
-        >
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <button onClick={() => file && upload(file)} disabled={disabled} style={btnStyle('#007bff')}>
           {uploading ? 'Загрузка...' : 'Загрузить базу данных'}
         </button>
-        <button
-          onClick={() => file && similar(file)}
-          disabled={disabled}
-          style={btnStyle(disabled, '#8e44ad')}
-        >
+        <button onClick={() => file && similar(file)} disabled={disabled} style={btnStyle('#8e44ad')}>
           {uploading ? 'Анализ...' : 'Анализ похожих'}
         </button>
       </div>
 
       {error && <ErrorMessage message={error} />}
 
-      {result && (
+      {result && !similarResult && (
         <div style={{ marginTop: '15px' }}>
           <h4 style={{ color: '#27ae60' }}>✓ База данных загружена ({result.length} маршрутов)</h4>
-          <button
-            onClick={() => navigate('/routes', { state: { result } })}
-            style={btnStyle(false, '#27ae60')}
-          >
-            Перейти к маршрутам →
-          </button>
+          <RouteMap routes={result} />
         </div>
       )}
 
-      {similarResult && (
+      {result && similarResult && (
         <div style={{ marginTop: '15px' }}>
           <h4 style={{ color: '#8e44ad' }}>✓ Найдено {similarResult.length} групп похожих маршрутов</h4>
-          <button
-            onClick={() => navigate('/routes', { state: { similarResult } })}
-            style={btnStyle(false, '#8e44ad')}
-          >
-            Просмотреть группы →
-          </button>
+          <SimilarMap routes={result} groups={similarResult} />
         </div>
       )}
     </div>

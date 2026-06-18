@@ -20,7 +20,7 @@ export function useDatabase() {
     checkHealth();
   }, [checkHealth]);
 
-  const upload = async (file: File, optimize: boolean) => {
+  const upload = async (file: File) => {
     setUploading(true);
     setError(null);
     setResult(null);
@@ -32,7 +32,7 @@ export function useDatabase() {
       return;
     }
     try {
-      const data = await uploadDatabase(databaseRepository, file, optimize);
+      const data = await uploadDatabase(databaseRepository, file);
       setResult(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка загрузки файла');
@@ -53,8 +53,12 @@ export function useDatabase() {
       return;
     }
     try {
-      const data = await uploadSimilar(databaseRepository, file);
-      setSimilarResult(data);
+      const [parseData, similarData] = await Promise.all([
+        uploadDatabase(databaseRepository, file),
+        uploadSimilar(databaseRepository, file),
+      ]);
+      setResult(parseData);
+      setSimilarResult(similarData);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка анализа похожих маршрутов');
     } finally {
