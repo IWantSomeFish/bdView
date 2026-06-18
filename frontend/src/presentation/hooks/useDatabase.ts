@@ -22,7 +22,7 @@ export function useDatabase() {
 
   const upload = async (file: File) => {
     if (result) {
-      // /parse уже был выполнен — просто сбрасываем similarResult
+      // /parse уже был выполнен
       setSimilarResult(null);
       setError(null);
       return;
