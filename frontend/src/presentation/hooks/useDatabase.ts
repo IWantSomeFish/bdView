@@ -21,9 +21,14 @@ export function useDatabase() {
   }, [checkHealth]);
 
   const upload = async (file: File) => {
+    if (result) {
+      // /parse уже был выполнен — просто сбрасываем similarResult
+      setSimilarResult(null);
+      setError(null);
+      return;
+    }
     setUploading(true);
     setError(null);
-    setResult(null);
     setSimilarResult(null);
     const online = await checkHealth();
     if (!online) {
@@ -44,7 +49,6 @@ export function useDatabase() {
   const similar = async (file: File) => {
     setUploading(true);
     setError(null);
-    setResult(null);
     setSimilarResult(null);
     const online = await checkHealth();
     if (!online) {
@@ -53,8 +57,9 @@ export function useDatabase() {
       return;
     }
     try {
+      // Используем уже загруженный result или запрашиваем заново
       const [parseData, similarData] = await Promise.all([
-        uploadDatabase(databaseRepository, file),
+        result ? Promise.resolve(result) : uploadDatabase(databaseRepository, file),
         uploadSimilar(databaseRepository, file),
       ]);
       setResult(parseData);
