@@ -1,5 +1,3 @@
-import { H3Trajectory } from "../utils/trajectory/trajectory.types";
-
 export const REQUIRED_TABLES = [
     "routes",
     "route_segments",
@@ -59,21 +57,3 @@ export const REQUIRED_COLUMNS = {
         "notes"
     ]
 }
-
-export type RouteGroup = {
-    number: number;
-
-    routes: GroupedRoute[];
-};
-
-export type GroupedRoute = {
-    routeId: string;
-
-    segments: GroupedSegment[];
-};
-
-export type GroupedSegment = {
-    segmentId: string;
-
-    calibrations: H3Trajectory[];
-};

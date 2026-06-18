@@ -9,11 +9,9 @@ export class trajectoryService {
     build(trajectory: TokenizedTrajectory): ModelSample {
         const inputIds = trajectory.tokenIds.slice(0, this.maxLength);
 
-        const attentionMask = new Array(inputIds.length).fill(1);
 
         while (inputIds.length < this.maxLength) {
             inputIds.push(Number(getEnvVariable("PAD_TOKEN")));
-            attentionMask.push(0);
         }
 
         return {
@@ -22,7 +20,6 @@ export class trajectoryService {
             segmentId: trajectory.segmentId,
 
             inputIds,
-            attentionMask,
         };
     }
 

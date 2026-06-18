@@ -1,3 +1,5 @@
+import * as tf from "@tensorflow/tfjs"
+
 export type H3Trajectory = {
     runId: string;
     routeId: string;
@@ -19,5 +21,12 @@ export type ModelSample = {
     segmentId: string;
 
     inputIds: number[];
-    attentionMask: number[];
 };
+
+export type routeTrigrams = {
+    runId: string;
+    routeId: string;
+    segmentId: string;
+
+    vector: string[]
+}
