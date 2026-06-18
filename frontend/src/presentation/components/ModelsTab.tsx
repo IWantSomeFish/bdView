@@ -4,12 +4,13 @@ interface ModelEntry {
   id: string;
   name: string;
   description: string;
+  version: string;
   uploadedAt: string;
   status: 'ok' | 'failed';
 }
 
 const MOCK_MODELS: ModelEntry[] = [
-  { id: '1', name: 'route-encoder-v1.json', description: 'Группировка маршрутов', uploadedAt: '2026-06-10', status: 'ok' },
+  { id: '1', name: 'route-encoder-v1.json', description: 'Группировка маршрутов', version: '1.0.0', uploadedAt: '2026-06-10', status: 'ok' },
 ];
 
 const ModelsTab: React.FC = () => {
@@ -41,7 +42,7 @@ const ModelsTab: React.FC = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
         <thead>
           <tr>
-            {['Название', 'Описание', 'Дата загрузки', 'Статус'].map(col => (
+            {['Название', 'Описание', 'Версия', 'Дата загрузки', 'Статус', ''].map(col => (
               <th key={col} style={{ border: '1px solid var(--border)', padding: '8px', background: 'var(--bg)', textAlign: 'left' }}>{col}</th>
             ))}
           </tr>
@@ -51,11 +52,20 @@ const ModelsTab: React.FC = () => {
             <tr key={m.id}>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.name}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.description}</td>
+              <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.version}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.uploadedAt}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>
                 <span style={{ color: m.status === 'ok' ? '#27ae60' : '#e74c3c', fontWeight: 'bold' }}>
                   {m.status === 'ok' ? '✓ Активна' : '✗ Неудачная'}
                 </span>
+              </td>
+              <td style={{ border: '1px solid var(--border)', padding: '8px' }}>
+                <button
+                  onClick={() => {/* TODO: API тренировки */}}
+                  style={{ padding: '4px 12px', backgroundColor: '#27ae60', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                >
+                  Тренировать
+                </button>
               </td>
             </tr>
           ))}
