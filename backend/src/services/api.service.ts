@@ -1,7 +1,7 @@
 import { SqliteRepository } from "../repositories/sqlite.repository";
 import { extractCalibrations } from "../utils/helpers.extractCalibs";
 import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
-import { DatasetBuilder } from "./trajectory.datasetBuilder";
+import { trajectoryService } from "./trajectory.service";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 import { H3Trajectory, ModelSample, TokenizedTrajectory } from "../utils/trajectory/trajectory.types";
 import { ParseService } from "./parse.service";
@@ -10,7 +10,7 @@ export class MainService {
         constructor(
             private readonly parser: ParseService = new ParseService,
             private readonly tokenizer: H3Tokenizer = new H3Tokenizer,
-            private readonly builder: DatasetBuilder = new DatasetBuilder,
+            private readonly builder: trajectoryService = new trajectoryService,
             private readonly repo = new SqliteRepository(),
         ) {}
 

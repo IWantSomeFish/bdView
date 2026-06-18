@@ -1,7 +1,7 @@
 import { getEnvVariable } from "../utils/env.helper";
 import { TokenizedTrajectory,ModelSample } from "../utils/trajectory/trajectory.types";
 
-export class DatasetBuilder {
+export class trajectoryService {
     constructor(
         private readonly maxLength: number = Number(getEnvVariable("MAX_SEQUENCE_LENGTH")),
     ) {}
