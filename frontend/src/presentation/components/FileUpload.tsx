@@ -21,7 +21,6 @@ const tabStyle = (active: boolean): React.CSSProperties => ({
 const FileUpload: React.FC = () => {
   const [tab, setTab] = useState<Tab>('database');
   const [file, setFile] = useState<File | null>(null);
-  const [dragging, setDragging] = useState(false);
   const { backendOnline, uploading, result, similarResult, error, upload, similar, reset } = useDatabase();
 
   const pickFile = (f: File) => { setFile(f); reset(); };
@@ -39,14 +38,12 @@ const FileUpload: React.FC = () => {
       {tab === 'database' && (
         <DatabaseTab
           file={file}
-          dragging={dragging}
           backendOnline={backendOnline}
           uploading={uploading}
           result={result}
           similarResult={similarResult}
           error={error}
           onPickFile={pickFile}
-          onDraggingChange={setDragging}
           onUpload={() => file && upload(file)}
           onSimilar={() => file && similar(file)}
         />
