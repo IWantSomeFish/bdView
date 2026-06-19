@@ -1,12 +1,12 @@
 import { SqliteRepository } from "../repositories/sqlite.repository";
-import { REQUIRED_TABLES } from "../types/api.types";
+import { REQUIRED_TABLES, Route } from "../types/api.types";
 
 export class ParseService {
     constructor(
         private readonly repo = new SqliteRepository(),
     ) { }
 
-    async parse(raw: any) {
+    async parse(raw: any): Promise<Route[]> {
         const tables: Record<string, unknown> = {};
 
         for (const table of REQUIRED_TABLES) {
@@ -22,7 +22,7 @@ export class ParseService {
             snapshots,
             "runId",
             "calibrationRunId",
-            "snapshotPoints"
+            "snapshots",
         )
         const segmentsCalibrations = connectTables(
             routeSegments,
@@ -37,7 +37,7 @@ export class ParseService {
             segmentsCalibrations,
             "routeId",
             "routeId",
-            "routeSegments",
+            "segments",
         );
         return routesWithSegments;
     }

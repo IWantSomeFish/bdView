@@ -1,32 +1,13 @@
-import * as tf from "@tensorflow/tfjs"
-
-export type H3Trajectory = {
+export interface H3Trajectory {
     runId: string;
     routeId: string;
-    segmentId: string;
+
     points: string[];
 };
 
-export type TokenizedTrajectory = {
+export interface TokenizedTrajectory {
     runId: string;
     routeId: string;
-    segmentId: string;
 
     tokenIds: number[];
 };
-
-export type ModelSample = {
-    runId: string;
-    routeId: string;
-    segmentId: string;
-
-    inputIds: number[];
-};
-
-export type routeTrigrams = {
-    runId: string;
-    routeId: string;
-    segmentId: string;
-
-    vector: string[]
-}

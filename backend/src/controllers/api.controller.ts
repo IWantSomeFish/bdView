@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { MainService } from "../services/api.service";
+import { serializeModel } from "../utils/model/model.train";
+import { saveJSON } from "../utils/helpers.saveJSON";
 
 const service = new MainService();
 export class ApiController {
@@ -34,6 +36,9 @@ export class ApiController {
                     error: "database file required",
                 })
             }
+            const parsedDB = await service.getRoutes(req.file.buffer)
+            const result = await service.trainModel(parsedDB)
+            return res.json(result)
         }
     }
 

@@ -57,3 +57,31 @@ export const REQUIRED_COLUMNS = {
         "notes"
     ]
 }
+
+export interface CalibrationSnapshot {
+    snapshotId: string,
+    calibrationRunId: string,
+    routeId: string,
+    segmentId: string,
+    gpsLatitude: number,
+    gpsLongitude: number,
+    gpsTimestamp: number,
+}
+export interface Calibration {
+    runId: string,
+    routeId: string,
+    segmentId: string,
+    source: string,
+    startedAtMillis: number,
+    finishedAtMillis: number,
+    snapshots: CalibrationSnapshot[]
+}
+export interface Segment {
+    segmentId: string,
+    routeId: string,
+    calibrations: Calibration[]
+}
+export interface Route {
+    routeId: string,
+    segments: Segment[],
+}

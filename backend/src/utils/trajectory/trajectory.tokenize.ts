@@ -22,8 +22,6 @@ export class H3Tokenizer {
         return {
             runId: trajectory.runId,
             routeId: trajectory.routeId,
-            segmentId: trajectory.segmentId,
-
             tokenIds: trajectory.points.map((h3) =>
                 this.tokenizeCell(h3),
             ),
