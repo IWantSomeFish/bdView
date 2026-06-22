@@ -5,6 +5,7 @@ import { SqliteRepository } from "../repositories/sqlite.repository";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 import path from "path";
 import fs from "fs";
+import { saveJSON } from "../utils/helpers.saveJSON";
 
 
 const service = new MainService(
@@ -72,6 +73,7 @@ export class ApiController {
             const model = JSON.parse(files.modelFile[0].buffer.toString('utf-8'));
             const parsedDB = await service.getRoutes(files.databaseFile[0].buffer);
             const result = await service.getSimilarRoutes(parsedDB, model);
+            saveJSON(result)
             return res.json(result);
         }
     }

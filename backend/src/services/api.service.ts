@@ -34,14 +34,16 @@ export class MainService {
                 const features: number[] = createRouteFeatures(this.tokenizer.tokenizeTrajectory(H3database[i]), this.tokenizer.tokenizeTrajectory(H3database[j]));
                 const prediction = predictLogistic(features, loadedModel.payload.weights)
                 if (result.has(H3database[j].runId)) {
-                    if (prediction >= loadedModel.threshold) {result.get(H3database[j].runId)?.push(H3database[i].runId)}
+                    if (prediction >= loadedModel.threshold) {
+                        result.get(H3database[j].runId)?.push(H3database[i].runId)
+                    }
                 }
                 else {
                     result.set(H3database[j].runId,[])
                 }
             }
         }
-        return result
+        return Object.fromEntries(result)
     }
     async trainModel (parsedDatabase: Route[]) {
         const H3database: H3Trajectory[] = await this.tokenizeRoutes(parsedDatabase)
