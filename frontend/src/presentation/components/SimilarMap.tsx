@@ -20,11 +20,11 @@ const SimilarMap: React.FC<Props> = ({ routes, groups }) => {
   const pointsByRunId = useMemo(() => {
     const map = new Map<string, [number, number][]>();
     for (const route of routes) {
-      for (const seg of route.routeSegments) {
+      for (const seg of route.segments ?? []) {
         for (const cal of seg.calibrations ?? []) {
-          const pts = (cal.snapshotPoints ?? [])
+          const pts = (cal.snapshots ?? [])
             .filter(fp => typeof fp.gpsLatitude === 'number' && !isNaN(fp.gpsLatitude) && !isNaN(fp.gpsLongitude))
-            .sort((a, b) => a.recordedAt - b.recordedAt)
+            .sort((a, b) => a.gpsTimestamp - b.gpsTimestamp)
             .map(fp => [fp.gpsLatitude, fp.gpsLongitude] as [number, number]);
           if (pts.length > 0) map.set(cal.runId, pts);
         }
