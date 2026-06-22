@@ -21,8 +21,8 @@ export async function loadRoutes(repo: IDatabaseRepository, file: File): Promise
   return repo.uploadDatabase(file);
 }
 
-export async function findSimilarRoutes(repo: IDatabaseRepository, file: File): Promise<SimilarResult> {
+export async function findSimilarRoutes(repo: IDatabaseRepository, dbFile: File, modelFile: File): Promise<SimilarResult> {
   const online = await checkBackendHealth(repo);
   if (!online) throw new Error('Backend недоступен');
-  return repo.uploadSimilar(file);
+  return repo.uploadSimilar(dbFile, modelFile);
 }

@@ -52,7 +52,7 @@ const ModelsTab: React.FC = () => {
     try {
       const form = new FormData();
       form.append('database', file);
-      const { data } = await apiClient.post('/models/train', form);
+      const { data } = await apiClient.post('/train', form);
       showMsg(`Обучена версия ${data.version}, F1=${data.metrics?.f1}`);
       fetchModels();
     } catch (err: any) {
@@ -62,12 +62,6 @@ const ModelsTab: React.FC = () => {
     }
   };
 
-  const btnStyle = (dis: boolean): React.CSSProperties => ({
-    padding: '10px 20px',
-    backgroundColor: dis ? '#ccc' : '#007bff',
-    color: 'white', border: 'none', borderRadius: '4px',
-    cursor: dis ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap',
-  });
 
   return (
     <>

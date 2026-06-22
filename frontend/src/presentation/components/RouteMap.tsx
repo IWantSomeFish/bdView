@@ -25,8 +25,8 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
     if (!selectedRoute) return { center: [56.9932, 40.9809] as [number, number], fingerprints: [], segmentColors: {}, segmentPaths: [] };
 
     let segments = selection.segmentId
-      ? selectedRoute.routeSegments.filter(s => s.segmentId === selection.segmentId)
-      : selectedRoute.routeSegments;
+      ? selectedRoute.segments.filter(s => s.segmentId === selection.segmentId)
+      : selectedRoute.segments;
 
     if (selection.calibrationId) {
       segments = segments.map(seg => ({
@@ -36,26 +36,26 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
     }
 
     const fps = segments
-      .flatMap(seg => (seg.calibrations ?? []).flatMap(cal => cal.snapshotPoints ?? []))
+      .flatMap(seg => (seg.calibrations ?? []).flatMap(cal => cal.snapshots ?? []))
       .filter(fp => typeof fp.gpsLatitude === 'number' && !isNaN(fp.gpsLatitude) && !isNaN(fp.gpsLongitude));
 
     const colors: Record<string, string> = {};
-    selectedRoute.routeSegments.forEach((seg, i) => { colors[seg.segmentId] = COLORS[i % COLORS.length]; });
+    selectedRoute.segments.forEach((seg, i) => { colors[seg.segmentId] = COLORS[i % COLORS.length]; });
 
     const c: [number, number] = fps.length > 0 ? [fps[0].gpsLatitude, fps[0].gpsLongitude] : [56.9932, 40.9809];
 
     const paths: MapPath[] = segments.flatMap(seg => {
       const sorted = (seg.calibrations ?? [])
-        .flatMap(cal => cal.snapshotPoints ?? [])
+        .flatMap(cal => cal.snapshots ?? [])
         .filter(fp => typeof fp.gpsLatitude === 'number' && !isNaN(fp.gpsLatitude))
-        .sort((a, b) => a.recordedAt - b.recordedAt);
+        .sort((a, b) => a.gpsTimestamp - b.gpsTimestamp);
 
       if (sorted.length < 2) return [];
 
       const groups: typeof sorted[] = [];
       let cur: typeof sorted = [sorted[0]];
       for (let i = 1; i < sorted.length; i++) {
-        if (sorted[i].recordedAt - sorted[i - 1].recordedAt > MAX_GAP_MS) { groups.push(cur); cur = [sorted[i]]; }
+        if (sorted[i].gpsTimestamp - sorted[i - 1].gpsTimestamp > MAX_GAP_MS) { groups.push(cur); cur = [sorted[i]]; }
         else cur.push(sorted[i]);
       }
       groups.push(cur);
@@ -78,11 +78,11 @@ const RouteMap: React.FC<Props> = ({ routes }) => {
 
   const breadcrumb = [
     selectedRoute?.name || selection.routeId,
-    selection.segmentId && selectedRoute?.routeSegments.find(s => s.segmentId === selection.segmentId)?.name,
-    selection.calibrationId && `Калибровка ${new Date(selectedRoute?.routeSegments.find(s => s.segmentId === selection.segmentId)?.calibrations?.find(c => c.runId === selection.calibrationId)?.startedAtMillis ?? 0).toLocaleDateString()}`,
+    selection.segmentId && selectedRoute?.segments.find(s => s.segmentId === selection.segmentId)?.name,
+    selection.calibrationId && `Калибровка ${new Date(selectedRoute?.segments.find(s => s.segmentId === selection.segmentId)?.calibrations?.find(c => c.runId === selection.calibrationId)?.startedAtMillis ?? 0).toLocaleDateString()}`,
   ].filter(Boolean).join(' → ');
 
-  const legend = (selectedRoute?.routeSegments ?? []).map((seg, i) => ({
+  const legend = (selectedRoute?.segments ?? []).map((seg, i) => ({
     segmentId: seg.segmentId,
     name: seg.name || seg.segmentId,
     color: COLORS[i % COLORS.length],
