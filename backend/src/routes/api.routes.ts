@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ApiController } from "../controllers/api.controller.js";
-import { uploadDatabase } from "../middlewares/upload.middleware.js";
+import { upload, uploadDatabase } from "../middlewares/upload.middleware.js";
 
 const router = Router();
 const controller = new ApiController();
@@ -17,6 +17,7 @@ router.post(
 
 router.post("/similar",
     uploadDatabase.single("database"),
+    upload.fields([{ name: "modelFile", maxCount: 1 },{ name: "databaseFile", maxCount: 1 }]),
     controller.getSimilar.bind(controller)
 );
 

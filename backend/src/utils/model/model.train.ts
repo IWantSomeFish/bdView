@@ -79,6 +79,19 @@ function findBestThreshold(
   return bestThreshold;
 }
 
+function shuffle(array: Array<{ runId: string; features: number[]; label: number }>): Array<{ runId: string; features: number[]; label: number }>  {
+
+  const shuffledArray = [...array]; 
+
+  for (let i = shuffledArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+  }
+
+  return shuffledArray;
+}
+
 // ─── публичный API ────────────────────────────────────────────────────────────
 
 /**
@@ -86,7 +99,7 @@ function findBestThreshold(
  *
  * @param scans  Массив строк: каждый скан = одно наблюдение одной сети в одном прогоне
  * @param params Параметры разметки (пороги эвристики). Опциональны, есть дефолты.
- * @returns      Готовый объект WifiModel, совместимый с model.inference.ts
+ * @returns      Готовый объект RouteSimilarityModel, совместимый с model.inference.ts
  */
 export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: TrainParams = {}, learningRate: number, epochs: number): RouteSimilarityModel {
 
@@ -105,24 +118,25 @@ export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: 
 
 		for (const calibrationB of calibrations){
 			const features: number[] = createRouteFeatures(tokenizer.tokenizeTrajectory(calibrationA), tokenizer.tokenizeTrajectory(calibrationB));
-			const label: boolean = (features[0] >= minSimiliraty) && (features[1] >= minCosin) && (features[2] <= maxLengthDiff)
+			const label: number = features[0] >= minSimiliraty && features[1] >= minCosin && features[2] >= maxLengthDiff ? 1 : 0
 			featureRows.push({
 				runId: calibrationB.runId,
 				features: features,
-				label: Number(label)
+				label: label
 		})
 		}
 	}
-	// ── шаг 2: разбивка train/validation 80/20 ───────────────────────────────
-	const trainSize  = Math.max(1, Math.floor(featureRows.length * 0.8));
-	const trainSet   = featureRows.slice(0, trainSize);
-	const valSet     = featureRows.slice(trainSize);
-
-	// ── шаг 3: обучение (SGD, 160 эпох) ─────────────────────────────────────
+	// ── шаг 2: Перемешать список для нормализации распределния ──────────────
+	const shuffledRows = shuffle(featureRows)
+	// ── шаг 3: разбивка train/validation 80/20 ───────────────────────────────
+	const trainSize  = Math.max(1, Math.floor(shuffledRows.length * 0.8));
+	const trainSet   = shuffledRows.slice(0, trainSize);
+	const valSet     = shuffledRows.slice(trainSize);
+	// ── шаг 4: обучение (SGD, 160 эпох) ─────────────────────────────────────
 	const weights = trainLogisticNeuron(
     trainSet.map((x) => ({ features: x.features, label: x.label })), epochs, learningRate);
 
-	// ── шаг 4: подбор порога ─────────────────────────────────────────────────
+	// ── шаг 5: подбор порога ─────────────────────────────────────────────────
 	// Если в validation нет ни одного label=1 (редкий класс), используем train
   	const evalSet = valSet.length > 0 && valSet.some((x) => x.label === 1) ? valSet : trainSet;
   	const evalData = evalSet.map((x) => ({ features: x.features, label: x.label }));

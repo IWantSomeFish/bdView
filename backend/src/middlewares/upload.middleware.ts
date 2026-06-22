@@ -6,3 +6,7 @@ export const uploadDatabase = multer({
         fileSize: 500 * 1024 * 1024, 
     },
 });
+
+export const upload = multer({
+    dest: "uploads/",
+});
