@@ -8,6 +8,7 @@ const controller = new ApiController();
 // GET healthcheck
 router.get("/health", controller.health.bind(controller));
 router.get("/parse", controller.parse.bind(controller));
+router.get("/models",controller.listModels.bind(controller))
 // POST upload sqlite
 router.post(
     "/parse",
@@ -20,5 +21,10 @@ router.post("/similar",
     upload.fields([{ name: "modelFile", maxCount: 1 },{ name: "databaseFile", maxCount: 1 }]),
     controller.getSimilar.bind(controller)
 );
+
+router.post("/train",
+    uploadDatabase.single("database"),
+    controller.train.bind(controller)
+)
 
 export default router;
