@@ -13,10 +13,25 @@ const GROUP_COLORS = [
 ];
 
 const SimilarMap: React.FC<Props> = ({ routes, groups }) => {
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(groups[0]?.id ?? null);
-  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
-  const [expandedGroups, setExpandedGroups] = useState<Set<number>>(new Set([groups[0]?.id ?? -1]));
+  // groups = { runId: [similarRunId, ...], ... }
+  // Строим кластеры: объединяем runId-ы которые похожи друг на друга
+  const clusters = useMemo(() => {
+    const entries = Object.entries(groups);
+    const visited = new Set<string>();
+    const result: string[][] = [];
 
+    for (const [runId, similarIds] of entries) {
+      if (visited.has(runId)) continue;
+      const cluster = [runId, ...similarIds.filter(id => !visited.has(id))];
+      cluster.forEach(id => visited.add(id));
+      if (cluster.length > 0) result.push(cluster);
+    }
+    return result;
+  }, [groups]);
+
+  const [selectedClusterIdx, setSelectedClusterIdx] = useState<number | null>(0);
+
+  // Индексируем GPS точки из /parse по runId
   const pointsByRunId = useMemo(() => {
     const map = new Map<string, [number, number][]>();
     for (const route of routes) {
@@ -34,111 +49,62 @@ const SimilarMap: React.FC<Props> = ({ routes, groups }) => {
   }, [routes]);
 
   const groupLayers = useMemo(() => {
-    return groups.map((group, idx) => {
+    return clusters.map((cluster, idx) => {
       const color = GROUP_COLORS[idx % GROUP_COLORS.length];
-      const routeLayers = group.routes.map(route => {
-        const pts: [number, number][] = [];
-        for (const seg of route.segments) {
-          for (const cal of seg.calibrations) {
-            const p = pointsByRunId.get(cal.runId);
-            if (p) pts.push(...p);
-          }
-        }
-        return { routeId: route.routeId, name: route.name, points: pts };
-      });
-      const allPoints = routeLayers.flatMap(r => r.points);
-      return { id: group.id, color, routeLayers, allPoints };
+      const allPoints = cluster.flatMap(runId => pointsByRunId.get(runId) ?? []);
+      return { idx, color, runIds: cluster, allPoints };
     });
-  }, [groups, pointsByRunId]);
+  }, [clusters, pointsByRunId]);
 
-  const selectedGroup = groupLayers.find(g => g.id === selectedGroupId);
-
-  const visiblePoints = useMemo(() => {
-    if (!selectedGroup) return groupLayers.flatMap(g => g.allPoints.map(p => ({ pt: p, color: g.color })));
-    if (selectedRouteId) {
-      const route = selectedGroup.routeLayers.find(r => r.routeId === selectedRouteId);
-      return (route?.points ?? []).map(p => ({ pt: p, color: selectedGroup.color }));
-    }
-    return selectedGroup.allPoints.map(p => ({ pt: p, color: selectedGroup.color }));
-  }, [selectedGroup, selectedRouteId, groupLayers]);
+  const visibleLayers = selectedClusterIdx === null ? groupLayers : groupLayers.filter(g => g.idx === selectedClusterIdx);
 
   const center = useMemo((): [number, number] => {
-    const first = visiblePoints[0];
-    return first ? first.pt : [56.9932, 40.9809];
-  }, [visiblePoints]);
-
-  const toggle = (set: Set<any>, key: any, setter: React.Dispatch<React.SetStateAction<Set<any>>>) => {
-    const next = new Set(set);
-    next.has(key) ? next.delete(key) : next.add(key);
-    setter(next);
-  };
+    for (const layer of groupLayers) {
+      if (layer.allPoints.length > 0) return layer.allPoints[0];
+    }
+    return [56.9932, 40.9809];
+  }, [groupLayers]);
 
   return (
     <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+      {/* Левая панель */}
       <div style={{ width: '300px', flexShrink: 0, border: '1px solid var(--border)', borderRadius: '4px', padding: '10px', maxHeight: '610px', overflowY: 'auto' }}>
-        {groupLayers.map(group => {
-          const isExpanded = expandedGroups.has(group.id);
-          const isSelected = group.id === selectedGroupId && !selectedRouteId;
-          return (
-            <div key={group.id} style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
-                  onClick={() => toggle(expandedGroups, group.id, setExpandedGroups as any)}
-                  style={{ width: '20px', height: '20px', border: '1px solid #999', background: 'transparent', cursor: 'pointer', fontSize: '12px', padding: 0 }}
-                >
-                  {isExpanded ? '−' : '+'}
-                </button>
-                <button
-                  onClick={() => { setSelectedGroupId(group.id); setSelectedRouteId(null); }}
-                  style={{ flex: 1, padding: '6px 10px', border: 'none', background: isSelected ? group.color : 'transparent', color: isSelected ? 'white' : 'var(--text)', textAlign: 'left', cursor: 'pointer', borderRadius: '3px', fontWeight: isSelected ? 'bold' : 'normal', borderLeft: `4px solid ${group.color}` }}
-                >
-                  Группа #{group.id} · {group.routeLayers.length} маршр. · {group.allPoints.length} точек
-                </button>
-              </div>
-
-              {isExpanded && (
-                <div style={{ marginLeft: '28px', marginTop: '4px' }}>
-                  {group.routeLayers.map(route => {
-                    const isRouteSelected = group.id === selectedGroupId && selectedRouteId === route.routeId;
-                    return (
-                      <div key={route.routeId} style={{ marginBottom: '2px' }}>
-                        <button
-                          onClick={() => { setSelectedGroupId(group.id); setSelectedRouteId(route.routeId); }}
-                          style={{ width: '100%', padding: '4px 8px', border: 'none', background: isRouteSelected ? '#e3f2fd' : 'transparent', textAlign: 'left', cursor: 'pointer', borderRadius: '3px', fontSize: '13px' }}
-                        >
-                          {route.name || route.routeId} ({route.points.length} точек)
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        <button
+          onClick={() => setSelectedClusterIdx(null)}
+          style={{ width: '100%', marginBottom: '8px', padding: '6px 10px', border: 'none', background: selectedClusterIdx === null ? '#333' : 'transparent', color: selectedClusterIdx === null ? 'white' : 'var(--text)', cursor: 'pointer', borderRadius: '3px', textAlign: 'left' }}
+        >
+          Все группы
+        </button>
+        {groupLayers.map(g => (
+          <button key={g.idx}
+            onClick={() => setSelectedClusterIdx(g.idx)}
+            style={{ width: '100%', marginBottom: '4px', padding: '6px 10px', border: 'none', background: selectedClusterIdx === g.idx ? g.color : 'transparent', color: selectedClusterIdx === g.idx ? 'white' : 'var(--text)', cursor: 'pointer', borderRadius: '3px', textAlign: 'left', borderLeft: `4px solid ${g.color}` }}
+          >
+            Группа #{g.idx + 1} · {g.runIds.length} калибр. · {g.allPoints.length} точек
+          </button>
+        ))}
       </div>
 
+      {/* Карта */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <div style={{ marginBottom: '8px', fontSize: '14px' }}>
-          {selectedGroup
-            ? <>Группа #{selectedGroup.id}{selectedRouteId && ` → ${selectedGroup.routeLayers.find(r => r.routeId === selectedRouteId)?.name}`}</>
-            : 'Все группы'
-          }
-          {' — '}{visiblePoints.length} точек
+          {selectedClusterIdx === null ? 'Все группы' : `Группа #${selectedClusterIdx + 1}`}
+          {' — '}{visibleLayers.reduce((sum, g) => sum + g.allPoints.length, 0)} точек
         </div>
-
         <MapContainer center={center} zoom={13} style={{ height: '600px', width: '100%', borderRadius: '8px' }}>
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          />
-          {visiblePoints.length > 1 && (
-            <Polyline positions={visiblePoints.map(p => p.pt)} pathOptions={{ color: selectedGroup?.color ?? '#999', weight: 2, opacity: 0.6 }} />
-          )}
-          {visiblePoints.map((p, i) => (
-            <CircleMarker key={i} center={p.pt} radius={3} pathOptions={{ color: p.color, fillOpacity: 0.6, weight: 1 }}>
-              <Tooltip>{selectedGroup ? `Группа #${selectedGroup.id}` : ''}</Tooltip>
-            </CircleMarker>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' />
+          {visibleLayers.map(layer => (
+            <React.Fragment key={layer.idx}>
+              {layer.allPoints.length > 1 && (
+                <Polyline positions={layer.allPoints} pathOptions={{ color: layer.color, weight: 2, opacity: 0.6 }} />
+              )}
+              {layer.allPoints.map((pt, i) => (
+                <CircleMarker key={i} center={pt} radius={3} pathOptions={{ color: layer.color, fillOpacity: 0.6, weight: 1 }}>
+                  <Tooltip>Группа #{layer.idx + 1}</Tooltip>
+                </CircleMarker>
+              ))}
+            </React.Fragment>
           ))}
         </MapContainer>
       </div>
