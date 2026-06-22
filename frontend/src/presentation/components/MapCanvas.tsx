@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Polyline } from 'react-leaflet';
-import type { RawCalibrationSnapshot } from '../../domain/types';
+import type { CalibrationSnapshot } from '../../domain/types';
 
 export interface MapPath {
   segmentId: string;
@@ -10,7 +10,7 @@ export interface MapPath {
 
 interface Props {
   center: [number, number];
-  fingerprints: (RawCalibrationSnapshot & { _source?: string | null })[];
+  fingerprints: CalibrationSnapshot[];
   segmentColors: Record<string, string>;
   segmentPaths: MapPath[];
   breadcrumb: string;
@@ -43,9 +43,7 @@ const MapCanvas: React.FC<Props> = ({ center, fingerprints, segmentColors, segme
         <CircleMarker key={fp.snapshotId} center={[fp.gpsLatitude, fp.gpsLongitude]} radius={4}
           pathOptions={{ color: segmentColors[fp.segmentId] || '#999', fillOpacity: 0.7, weight: 1 }}>
           <Tooltip>
-            Точность GPS: {fp.gpsAccuracy ? `${fp.gpsAccuracy.toFixed(1)}m` : 'N/A'}
-            <br />
-            Время: {new Date(fp.recordedAt).toLocaleString()}
+            Время: {new Date(fp.gpsTimestamp).toLocaleString()}
           </Tooltip>
         </CircleMarker>
       ))}

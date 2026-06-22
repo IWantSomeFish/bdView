@@ -37,7 +37,6 @@ const FileUpload: React.FC = () => {
 
       {tab === 'database' && (
         <DatabaseTab
-          file={file}
           backendOnline={backendOnline}
           uploading={uploading}
           result={result}
@@ -45,7 +44,7 @@ const FileUpload: React.FC = () => {
           error={error}
           onPickFile={pickFile}
           onUpload={() => file && upload(file)}
-          onSimilar={() => file && similar(file)}
+          onSimilar={(modelFile) => file && similar(file, modelFile)}
         />
       )}
 

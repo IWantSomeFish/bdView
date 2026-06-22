@@ -1,1 +1,4 @@
 /node_modules
+backend/route-model.json
+backend/uploads/*
+backend/output-*

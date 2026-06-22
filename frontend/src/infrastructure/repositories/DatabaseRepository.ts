@@ -17,9 +17,10 @@ export class DatabaseRepository implements IDatabaseRepository {
       .then((res) => res.data);
   }
 
-  uploadSimilar(file: File): Promise<SimilarResult> {
+  uploadSimilar(dbFile: File, modelFile: File): Promise<SimilarResult> {
     const formData = new FormData();
-    formData.append('database', file);
+    formData.append('databaseFile', dbFile);
+    formData.append('modelFile', modelFile);
     return apiClient
       .post<SimilarResult>('/similar', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

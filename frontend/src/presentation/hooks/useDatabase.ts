@@ -20,9 +20,10 @@ export function useDatabase() {
   }, [checkHealth]);
 
   const upload = async (file: File) => {
-    if (result) { setSimilarResult(null); setError(null); return; }
     setUploading(true);
     setError(null);
+    setResult(null);
+    setSimilarResult(null);
     try {
       const data = await loadRoutes(databaseRepository, file);
       setResult(data);
@@ -36,14 +37,14 @@ export function useDatabase() {
     }
   };
 
-  const similar = async (file: File) => {
+  const similar = async (dbFile: File, modelFile: File) => {
     setUploading(true);
     setError(null);
     setSimilarResult(null);
     try {
       const [parseData, similarData] = await Promise.all([
-        result ? Promise.resolve(result) : loadRoutes(databaseRepository, file),
-        findSimilarRoutes(databaseRepository, file),
+        result ? Promise.resolve(result) : loadRoutes(databaseRepository, dbFile),
+        findSimilarRoutes(databaseRepository, dbFile, modelFile),
       ]);
       setResult(parseData);
       setSimilarResult(similarData);

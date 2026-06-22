@@ -46,9 +46,9 @@ const RouteTree: React.FC<Props> = ({
             <div style={{ marginLeft: '28px', marginTop: '4px' }}>
               <div onClick={() => onSelectSegment(route.routeId, null)}
                 style={{ padding: '4px 8px', cursor: 'pointer', background: isRouteSelected && !selection.segmentId ? '#e3f2fd' : 'transparent', borderRadius: '3px', fontSize: '13px', marginBottom: '2px' }}>
-                ✓ Весь маршрут ({route.routeSegments.reduce((sum, s) => sum + (s.calibrations?.reduce((cSum, c) => cSum + (c.snapshotPoints?.length ?? 0), 0) ?? 0), 0)} точек)
+                ✓ Весь маршрут ({(route.segments ?? []).reduce((sum, s) => sum + (s.calibrations?.reduce((cSum, c) => cSum + (c.snapshots?.length ?? 0), 0) ?? 0), 0)} точек)
               </div>
-              {route.routeSegments.map((seg) => {
+              {(route.segments ?? []).map((seg) => {
                 const isSegSelected = isRouteSelected && selection.segmentId === seg.segmentId && !selection.calibrationId;
                 const isSegExpanded = expandedSegments.has(seg.segmentId);
                 return (
@@ -61,7 +61,7 @@ const RouteTree: React.FC<Props> = ({
                       <div onClick={() => onSelectSegment(route.routeId, seg.segmentId)}
                         style={{ flex: 1, padding: '4px 8px', cursor: 'pointer', background: isSegSelected ? '#e3f2fd' : 'transparent', borderRadius: '3px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '10px', height: '10px', backgroundColor: segmentColors[seg.segmentId], borderRadius: '50%' }} />
-                        {seg.name || seg.segmentId} ({seg.calibrations?.reduce((sum, c) => sum + (c.snapshotPoints?.length ?? 0), 0) ?? 0} точек)
+                        {seg.name || seg.segmentId} ({(seg.calibrations?.reduce((sum, c) => sum + (c.snapshots?.length ?? 0), 0) ?? 0)} точек)
                       </div>
                     </div>
                     {isSegExpanded && (
@@ -71,7 +71,7 @@ const RouteTree: React.FC<Props> = ({
                           return (
                             <div key={cal.runId} onClick={() => onSelectCalibration(route.routeId, seg.segmentId, cal.runId)}
                               style={{ padding: '3px 6px', cursor: 'pointer', background: isCalSelected ? '#e3f2fd' : 'transparent', borderRadius: '3px', fontSize: '12px', marginBottom: '1px' }}>
-                              {new Date(cal.startedAtMillis).toLocaleDateString()} — {cal.source ?? 'N/A'} ({cal.snapshotPoints?.length ?? 0} точек)
+                              {new Date(cal.startedAtMillis).toLocaleDateString()} — {cal.source ?? 'N/A'} ({cal.snapshots?.length ?? 0} точек)
                             </div>
                           );
                         })}
