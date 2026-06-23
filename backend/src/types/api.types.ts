@@ -74,7 +74,9 @@ export interface Calibration {
     source: string,
     startedAtMillis: number,
     finishedAtMillis: number,
-    snapshots: CalibrationSnapshot[]
+    snapshots: CalibrationSnapshot[],
+    stableNetworkCount?: number,
+    totalNetworkCount?: number,
 }
 export interface Segment {
     segmentId: string,
