@@ -12,11 +12,11 @@ import { loadModel, predictLogistic } from "../utils/model/model.inference";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 
 export class MainService {
-        constructor(
-            private readonly parser: ParseService,
-            private readonly repo: SqliteRepository,
-            private readonly tokenizer: H3Tokenizer,
-        ) {}
+    constructor(
+        private readonly parser: ParseService,
+        private readonly repo: SqliteRepository,
+        private readonly tokenizer: H3Tokenizer,
+    ) { }
 
     /* Функция для получения базы данных в виде древовидной структуры */
     async getRoutes(buffer: Buffer): Promise<Route[]> {
@@ -30,7 +30,7 @@ export class MainService {
         const loadedModel: RouteSimilarityModel = loadModel(model)
         const result = new Map<string, string[]>();
         for (let i = 0; i < H3database.length - 1; i++) {
-            for (let j = i+1; j < H3database.length - 1; j++) {
+            for (let j = i + 1; j < H3database.length - 1; j++) {
                 const features: number[] = createRouteFeatures(this.tokenizer.tokenizeTrajectory(H3database[i]), this.tokenizer.tokenizeTrajectory(H3database[j]));
                 const prediction = predictLogistic(features, loadedModel.payload.weights)
                 if (result.has(H3database[j].runId)) {
@@ -39,16 +39,17 @@ export class MainService {
                     }
                 }
                 else {
-                    result.set(H3database[j].runId,[])
+                    result.set(H3database[j].runId, [])
                 }
             }
         }
         return Object.fromEntries(result)
     }
-    async trainModel (parsedDatabase: Route[]) {
+    async trainModel(parsedDatabase: Route[]) {
         const H3database: H3Trajectory[] = await this.tokenizeRoutes(parsedDatabase)
-        const trainParams: TrainParams = {minRouteSimiliraty: 0.55, minCosin: 0.55, maxLengthDiffirence: 0.2}
-        const model = trainRouteSimilarityModel(H3database,trainParams,0.05,500)
+        const trainParams: TrainParams = { minRouteSimiliraty: 0.55, minCosin: 0.55, maxLengthDiffirence: 0.2 }
+        // HyperParametrs
+        const model = trainRouteSimilarityModel(H3database, trainParams, 0.05, 200)
         const result = serializeModel(model)
         saveJSON(JSON.parse(result))
         return result
@@ -56,7 +57,7 @@ export class MainService {
     private async tokenizeRoutes(dataSheets: Route[]): Promise<H3Trajectory[]> {
 
         const calibrations: Calibration[] = extractCalibrations(dataSheets);
-        const trajectories: H3Trajectory[] =  calibrations.map(data => runToH3Trajectory(data)).filter((x): x is H3Trajectory => x !== null);
+        const trajectories: H3Trajectory[] = calibrations.map(data => runToH3Trajectory(data)).filter((x): x is H3Trajectory => x !== null);
         return trajectories
     }
 }
