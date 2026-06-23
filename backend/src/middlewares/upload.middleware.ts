@@ -8,5 +8,5 @@ export const uploadDatabase = multer({
 });
 
 export const upload = multer({
-    dest: "uploads/",
+    storage: multer.memoryStorage(),
 });

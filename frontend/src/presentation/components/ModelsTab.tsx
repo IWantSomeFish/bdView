@@ -53,7 +53,8 @@ const ModelsTab: React.FC = () => {
       const form = new FormData();
       form.append('database', file);
       const { data } = await apiClient.post('/train', form);
-      showMsg(`Обучена версия ${data.version}, F1=${data.metrics?.f1}`);
+      const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      showMsg(`Обучена версия ${parsed.version}, F1=${parsed.metrics?.f1}`);
       fetchModels();
     } catch (err: any) {
       showMsg(err.response?.data?.error ?? 'Ошибка обучения модели', true);
@@ -74,13 +75,13 @@ const ModelsTab: React.FC = () => {
       )}
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
-        <h3 style={{ marginTop: 0 }}>Загрузить модель (JSON)</h3>
-        <DropZone accept={['.json']} disabled={loading} hint="(.json)" onFile={handleUpload} />
+        <h3 style={{ marginTop: 0 }}>Обучить модель на своей БД</h3>
+        <DropZone accept={['.db', '.sqlite']} disabled={loading} hint="(.db, .sqlite) — модель обучится и сохранится автоматически" onFile={handleTrain} />
       </div>
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>Обучить модель на своей БД</h3>
-        <DropZone accept={['.db', '.sqlite']} disabled={loading} hint="(.db, .sqlite) — модель обучится и сохранится автоматически" onFile={handleTrain} />
+        <h3 style={{ marginTop: 0 }}>Загрузить модель (JSON)</h3>
+        <DropZone accept={['.json']} disabled={loading} hint="(.json)" onFile={handleUpload} />
       </div>
 
       <h3>Список моделей</h3>

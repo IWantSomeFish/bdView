@@ -17,10 +17,14 @@ router.post(
 );
 
 router.post("/similar",
-    uploadDatabase.single("database"),
     upload.fields([{ name: "modelFile", maxCount: 1 },{ name: "databaseFile", maxCount: 1 }]),
     controller.getSimilar.bind(controller)
 );
+
+router.post("/models/upload",
+    upload.single("model"),
+    controller.uploadModel.bind(controller)
+)
 
 router.post("/train",
     uploadDatabase.single("database"),

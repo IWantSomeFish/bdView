@@ -5,8 +5,8 @@ import { SqliteRepository } from "../repositories/sqlite.repository";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 import path from "path";
 import fs from "fs";
+import { saveJSON } from "../utils/helpers.saveJSON";
 
-const MODEL_PATH = path.resolve('./route-model.json');
 
 const service = new MainService(
     new ParseService, new SqliteRepository, new H3Tokenizer
@@ -35,39 +35,64 @@ export class ApiController {
             return res.json(result);
         }
     }
-    async listModels(req: Request, res: Response) {
-        if (req.method === "GET") {
-            const raw = JSON.parse(fs.readFileSync(MODEL_PATH, 'utf-8'));
-            res.json([{
-                id:          raw.version,
-                name:        `${raw.type}.json`,
-                description: raw.type,
-                version:     raw.version,
-                uploadedAt:  raw.createdAt,
-                status:      'ok' as const}]);
+    async listModels(_req: Request, res: Response) {
+        try {
+            const files = fs.readdirSync('.').filter(f => f.startsWith('route-model-') && f.endsWith('.json'));
+            const models = files.map(file => {
+                const raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
+                return {
+                    id:          raw.version,
+                    name:        file,
+                    description: raw.type ?? 'route-similarity',
+                    version:     raw.version,
+                    uploadedAt:  raw.createdAt,
+                    status:      'ok' as const,
+                };
+            });
+            res.json(models);
+        } catch {
+            res.json([]);
         }
     }
 
     async getSimilar(req: Request, res: Response) {
         if (req.method === "POST") {
             const files = req.files as {
-                model?: Express.Multer.File[];
-                database?: Express.Multer.File[];
+                modelFile?: Express.Multer.File[];
+                databaseFile?: Express.Multer.File[];
             };
 
-            if (!files.model?.length) {
+            if (!files.modelFile?.length) {
                 return res.status(400).json({error: "modelFile is required"});
             }
 
-            if (!files.database?.length) {
+            if (!files.databaseFile?.length) {
                 return res.status(400).json({error: "databaseFile is required"});
-            
             }
-            const model = JSON.parse(req.body.model);
-            const database = JSON.parse(req.body.database)
-            const parsedDB = await service.getRoutes(database)
-            const result = await service.getSimilarRoutes(parsedDB,model)
-            return res.json(result)
+
+            const model = JSON.parse(files.modelFile[0].buffer.toString('utf-8'));
+            const parsedDB = await service.getRoutes(files.databaseFile[0].buffer);
+            const result = await service.getSimilarRoutes(parsedDB, model);
+            saveJSON(result)
+            return res.json(result);
+        }
+    }
+
+    async uploadModel(req: Request, res: Response) {
+        if (!req.file) {
+            return res.status(400).json({ error: 'Нужен файл модели (поле "model")' });
+        }
+        try {
+            const json = req.file.buffer.toString('utf-8');
+            const parsed = JSON.parse(json);
+            if (!parsed?.payload?.weights) {
+                return res.status(400).json({ error: 'Невалидный файл модели: отсутствуют weights' });
+            }
+            const version = parsed.version ?? Date.now();
+            fs.writeFileSync(`route-model-${version}.json`, json);
+            res.json({ ok: true, version });
+        } catch {
+            res.status(400).json({ error: 'Невалидный JSON' });
         }
     }
 
