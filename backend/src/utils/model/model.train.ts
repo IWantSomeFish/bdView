@@ -117,6 +117,9 @@ export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: 
 	for (const calibrationA of calibrations) {
 
 		for (const calibrationB of calibrations){
+			if (calibrationA.runId === calibrationB.runId) {
+				continue
+			}
 			const features: number[] = createRouteFeatures(tokenizer.tokenizeTrajectory(calibrationA), tokenizer.tokenizeTrajectory(calibrationB));
 			const label: number = features[0] >= minSimiliraty && features[1] >= minCosin && features[2] >= maxLengthDiff ? 1 : 0
 			featureRows.push({

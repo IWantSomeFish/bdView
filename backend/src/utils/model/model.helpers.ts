@@ -29,35 +29,28 @@ function routesSimilarity(a: TokenizedTrajectory, b: TokenizedTrajectory): numbe
 
 function cosinSimilarity(a: number[], b: number[]): number {
 
-    const maxLength = Math.max(a.length,b.length);
+     const maxLength = Math.max(a.length, b.length);
 
-    if (maxLength === 0) {
-        return 1;
-    }
-
-    let difference = 0;
+    let dot = 0;
+    let normA = 0;
+    let normB = 0;
 
     for (let i = 0; i < maxLength; i++) {
         const av = a[i] ?? 0;
         const bv = b[i] ?? 0;
 
-        difference += Math.abs(av - bv);
+        dot += av * bv;
+        normA += av * av;
+        normB += bv * bv;
     }
 
-    let maxPossibleDifference = 0;
+    const lengthA = Math.sqrt(normA);
+    const lengthB = Math.sqrt(normB);
 
-    for (let i = 0; i < maxLength; i++) {
-        const av = Math.abs(a[i] ?? 0);
-        const bv = Math.abs(b[i] ?? 0);
+    const denominator = lengthA * lengthB;
 
-        maxPossibleDifference += Math.max(av, bv);
-    }
-
-    if (maxPossibleDifference === 0) {
-        return 1;
-    }
-
-    return 1 - difference / maxPossibleDifference;
+    const result = denominator === 0 ? 0 : dot / denominator;
+    return result
 }
 
 export function createRouteFeatures(calibrationA: TokenizedTrajectory, calibrationB: TokenizedTrajectory): number[] {
