@@ -1,7 +1,7 @@
 import { getEnvVariable } from "../env.helper";
 import { H3Tokenizer } from "../trajectory/trajectory.tokenize";
 import { H3Trajectory } from "../trajectory/trajectory.types";
-import { createRouteFeatures } from "./model.modelTest";
+import { createRouteFeatures } from "./model.helpers";
 import { RouteSimilarityModel, TrainParams } from "./model.types";
 
 function predictLogistic(features: number[], weights: number[]): number {

@@ -31,5 +31,5 @@ export interface RouteFeatures {
     routeId: string,
 
     points: string[]
-    embeddings: Number[][]
+    embeddings: number[][]
 }

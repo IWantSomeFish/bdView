@@ -6,7 +6,8 @@ function lengthDiffirence(a: TokenizedTrajectory, b: TokenizedTrajectory): numbe
     }
     const setA = new Set(a.tokenIds)
     const setB = new Set(b.tokenIds)
-    return (Math.min(setA.size,setB.size) / Math.max(setB.size, setB.size))
+    const result = (Math.min(setA.size,setB.size) / Math.max(setA.size, setB.size))
+    return result
 }
 
 function routesSimilarity(a: TokenizedTrajectory, b: TokenizedTrajectory): number {

@@ -4,7 +4,7 @@ import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
 import { H3Trajectory } from "../utils/trajectory/trajectory.types";
 import { ParseService } from "./parse.service";
 import { Calibration, Route } from "../types/api.types";
-import { createRouteFeatures } from "../utils/model/model.modelTest";
+import { createRouteFeatures } from "../utils/model/model.helpers";
 import { saveJSON } from "../utils/helpers.saveJSON";
 import { serializeModel, trainRouteSimilarityModel } from "../utils/model/model.train";
 import { RouteSimilarityModel, TrainParams } from "../utils/model/model.types";
