@@ -69,7 +69,7 @@ const DatabaseTab: React.FC<Props> = ({
 
       {result && similarResult && (
         <div style={{ marginTop: '15px' }}>
-          <h4 style={{ color: '#8e44ad' }}>✓ Найдено {similarResult.length} групп похожих маршрутов</h4>
+          <h4 style={{ color: '#8e44ad' }}>✓ Найдено {Object.values(similarResult).filter(v => v.length > 0).length} групп похожих маршрутов</h4>
           <SimilarMap routes={result} groups={similarResult} />
         </div>
       )}

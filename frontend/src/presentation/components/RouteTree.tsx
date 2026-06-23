@@ -26,7 +26,7 @@ const RouteTree: React.FC<Props> = ({
   onSelectRoute, onSelectSegment, onSelectCalibration,
   onToggleRoute, onToggleSegment,
 }) => (
-  <div style={{ width: '300px', flexShrink: 0, border: '1px solid var(--border)', borderRadius: '4px', padding: '10px', maxHeight: '610px', overflowY: 'auto' }}>
+  <div style={{ width: '300px', flexShrink: 0, border: '1px solid var(--border)', borderRadius: '4px', padding: '10px', maxHeight: '650px', overflowY: 'auto' }}>
     {routes.map((route) => {
       const isExpanded = expandedRoutes.has(route.routeId);
       const isRouteSelected = route.routeId === selection.routeId;
