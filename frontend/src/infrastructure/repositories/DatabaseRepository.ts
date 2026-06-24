@@ -1,6 +1,6 @@
 import { apiClient } from '../http/apiClient';
 import type { IDatabaseRepository } from '../../domain/IDatabaseRepository';
-import type { ParseResult, SimilarResult } from '../../domain/types';
+import type { ParseResult, SimilarResult, InferenceRequest, InferenceResult } from '../../domain/types';
 
 export class DatabaseRepository implements IDatabaseRepository {
   checkHealth(): Promise<void> {
@@ -11,7 +11,7 @@ export class DatabaseRepository implements IDatabaseRepository {
     const formData = new FormData();
     formData.append('database', file);
     return apiClient
-      .post<ParseResult>('/parse', formData, {
+      .post<ParseResult>('/route/parse', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((res) => res.data);
@@ -22,7 +22,18 @@ export class DatabaseRepository implements IDatabaseRepository {
     formData.append('databaseFile', dbFile);
     formData.append('modelFile', modelFile);
     return apiClient
-      .post<SimilarResult>('/similar', formData, {
+      .post<SimilarResult>('/route/inference', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res) => res.data);
+  }
+
+  infer(request: InferenceRequest): Promise<InferenceResult> {
+    const formData = new FormData();
+    if (request.dbFile) formData.append('databaseFile', request.dbFile);
+    if (request.modelFile) formData.append('modelFile', request.modelFile);
+    return apiClient
+      .post<InferenceResult>(`/${request.modelType === 'wifi_filter' ? 'wifi' : 'route'}/inference`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       .then((res) => res.data);

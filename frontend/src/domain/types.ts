@@ -36,3 +36,13 @@ export type ParseResult = Route[];
 
 // /similar response — Map<runId, similarRunIds[]> сериализованный в объект
 export type SimilarResult = Record<string, string[]>;
+
+export type ModelType = 'route_similarity' | 'wifi_filter';
+
+export interface InferenceRequest {
+  modelType: ModelType;
+  dbFile?: File;
+  modelFile?: File;
+}
+
+export type InferenceResult = Record<string, string[]> | string[];
