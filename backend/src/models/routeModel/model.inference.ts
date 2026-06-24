@@ -1,18 +1,6 @@
 import { RouteSimilarityModel } from "./model.types";
 
 /**
- * Загружает и валидирует модель из JSON-объекта.
- * Передай результат require('./.json') или fetch+json().
- */
-export function loadModel(raw: unknown): RouteSimilarityModel {
-  const m = raw as RouteSimilarityModel;
-  if (!m?.payload?.weights) {
-    throw new Error('Невалидный файл модели: отсутствуют weights');
-  }
-  return m;
-}
-
-/**
  * Сигмоида + скалярное произведение весов и признаков.
  * weights[0] = bias, weights[1..n] = веса признаков.
  */

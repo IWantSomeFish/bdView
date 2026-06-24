@@ -2,39 +2,76 @@ import { SqliteRepository } from "../repositories/sqlite.repository";
 import { extractCalibrations } from "../utils/helpers.extractCalibs";
 import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
 import { H3Trajectory } from "../utils/trajectory/trajectory.types";
-import { ParseService } from "./parse.service";
-import { Calibration, Route } from "../types/api.types";
+import { Calibration, REQUIRED_TABLES, Route } from "../types/api.types";
 import { createRouteFeatures } from "../models/routeModel/model.helpers";
 import { saveJSON } from "../utils/helpers.saveJSON";
 import { serializeModel, trainRouteSimilarityModel } from "../models/routeModel/model.train";
 import { RouteSimilarityModel, TrainParams } from "../models/routeModel/model.types";
-import { loadModel, predictLogistic } from "../models/routeModel/model.inference";
+import { predictLogistic } from "../models/routeModel/model.inference";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
-import { ScanRow } from "../models/wifiModel/model.train";
+import { modelAPI } from "./modelAPI.types";
+import { connectTables } from "../utils/connectTable.helper";
 
-export class MainService {
+export class RouteSerivce implements modelAPI {
     constructor(
-        private readonly parser: ParseService,
         private readonly repo: SqliteRepository,
         private readonly tokenizer: H3Tokenizer,
     ) { }
 
     /* Функция для получения базы данных в виде древовидной структуры */
-    async getRoutes(buffer: Buffer): Promise<Route[]> {
+    async get(buffer: Buffer): Promise<Route[]> {
 
         const rawDB = await this.repo.dump(buffer);
-        const result = await this.parser.parseRoutes(rawDB);
+        const result = await this.parse(rawDB);
         return result
+    }
+    
+    async parse(raw: any): Promise<Route[]> {
+        const tables: Record<string, unknown> = {};
+
+        for (const table of REQUIRED_TABLES) {
+            tables[table] = raw[table] ?? [];
+        }
+        const routes = tables.routes as any[];
+        const routeSegments = tables.route_segments as any[];
+        const calibrations = tables.calibration_runs as any[];
+        const snapshots = tables.raw_calibration_snapshots as any[];
+
+        const calibrationsWithSnapshots = connectTables(
+            calibrations,
+            snapshots,
+            "runId",
+            "calibrationRunId",
+            "snapshots",
+        )
+        const segmentsCalibrations = connectTables(
+            routeSegments,
+            calibrationsWithSnapshots,
+            "segmentId",
+            "segmentId",
+            "calibrations",
+        );
+
+        const routesWithSegments = connectTables(
+            routes,
+            segmentsCalibrations,
+            "routeId",
+            "routeId",
+            "segments",
+        );
+        return routesWithSegments;
+    }
+    loadModel(raw: unknown): RouteSimilarityModel {
+        const m = raw as RouteSimilarityModel;
+        if (!m?.payload?.weights) {
+            throw new Error('Невалидный файл модели: отсутствуют weights');
+        }
+        return m;
     }
 
-    async getScans (buffer: Buffer): Promise<ScanRow[]> {
-        const rawDB = await this.repo.dump(buffer)
-        const result = await this.parser.parseScans(rawDB)
-        return result
-    }
-    async getSimilarRoutes(database: Route[], model: unknown) {
+    async inference(database: Route[], model: unknown) {
         const H3database: H3Trajectory[] = await this.tokenizeRoutes(database)
-        const loadedModel: RouteSimilarityModel = loadModel(model)
+        const loadedModel: RouteSimilarityModel = this.loadModel(model)
         const result = new Map<string, string[]>();
         for (let i = 0; i < H3database.length - 1; i++) {
             for (let j = i + 1; j < H3database.length - 1; j++) {
@@ -52,7 +89,8 @@ export class MainService {
         }
         return Object.fromEntries(result)
     }
-    async trainModel(parsedDatabase: Route[],params: TrainParams) {
+
+    async train(parsedDatabase: Route[],params: TrainParams) {
         const H3database: H3Trajectory[] = await this.tokenizeRoutes(parsedDatabase)
         // HyperParametrs
         const model = trainRouteSimilarityModel(H3database, params)

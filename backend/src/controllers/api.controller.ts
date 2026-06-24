@@ -1,13 +1,5 @@
 import { Request, Response } from "express";
-import { MainService } from "../services/api.service";
-import { ParseService } from "../services/parse.service";
-import { SqliteRepository } from "../repositories/sqlite.repository";
-import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
 import fs from "fs";
-
-export const service = new MainService(
-    new ParseService, new SqliteRepository, new H3Tokenizer
-);
 export class ApiController {
     async health(_req: Request, res: Response) {
         res.status(200).json({

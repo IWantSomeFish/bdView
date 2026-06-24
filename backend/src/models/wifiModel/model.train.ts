@@ -23,7 +23,7 @@ export interface ScanRow {
   runId: string;
 }
 
-export interface TrainParams {
+export interface WifiTrainParams {
   /** Минимальная доля прогонов, видевших сеть (0..1). По умолчанию 0.5 */
   minAppearanceFreq?: number;
   /** Максимальная дисперсия сигнала. По умолчанию 120 */
@@ -127,7 +127,7 @@ function findBestThreshold(
  * @param params Параметры разметки (пороги эвристики). Опциональны, есть дефолты.
  * @returns      Готовый объект WifiModel, совместимый с model.inference.ts
  */
-export function trainWifiModel(scans: ScanRow[], params: TrainParams = {}): WifiModel {
+export function trainWifiModel(scans: ScanRow[], params: WifiTrainParams = {}): WifiModel {
   if (scans.length < 50) {
     throw new Error(`Слишком мало сканов для обучения: ${scans.length} (нужно >= 50)`);
   }
