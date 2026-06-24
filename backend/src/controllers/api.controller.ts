@@ -3,9 +3,10 @@ import { MainService } from "../services/api.service";
 import { ParseService } from "../services/parse.service";
 import { SqliteRepository } from "../repositories/sqlite.repository";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
-import path from "path";
 import fs from "fs";
 import { saveJSON } from "../utils/helpers.saveJSON";
+import { TrainParams } from "../utils/model/model.types";
+import { parseTrainingConfig } from "../utils/configValidation.helper";
 
 
 const service = new MainService(
@@ -103,8 +104,9 @@ export class ApiController {
                     error: "database file required",
                 })
             }
+            const trainingConfig: TrainParams = parseTrainingConfig(JSON.parse(req.body.config))
             const parsedDB = await service.getRoutes(req.file.buffer)
-            const result = await service.trainModel(parsedDB)
+            const result = await service.trainModel(parsedDB,trainingConfig)
             return res.json(result)
         }
     }

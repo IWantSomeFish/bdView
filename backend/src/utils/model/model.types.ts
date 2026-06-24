@@ -20,9 +20,11 @@ export interface RouteSimilarityModel {
 
 export interface TrainParams {
   /** Минимальный процент схожести маршрутов в долях */
-  minRouteSimiliraty?: number;
-  minCosin?: number;
-  maxLengthDiffirence?: number;
+  minRouteSimiliraty: number;
+  minCosin: number;
+  maxLengthDiffirence: number;
+  epochs: number;
+  learningRate: number;
 }
 
 export interface RouteFeatures {

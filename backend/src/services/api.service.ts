@@ -45,11 +45,10 @@ export class MainService {
         }
         return Object.fromEntries(result)
     }
-    async trainModel(parsedDatabase: Route[]) {
+    async trainModel(parsedDatabase: Route[],params: TrainParams) {
         const H3database: H3Trajectory[] = await this.tokenizeRoutes(parsedDatabase)
-        const trainParams: TrainParams = { minRouteSimiliraty: 0.55, minCosin: 0.55, maxLengthDiffirence: 0.2 }
         // HyperParametrs
-        const model = trainRouteSimilarityModel(H3database, trainParams, 0.05, 200)
+        const model = trainRouteSimilarityModel(H3database, params)
         const result = serializeModel(model)
         saveJSON(JSON.parse(result))
         return result

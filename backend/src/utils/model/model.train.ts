@@ -101,16 +101,16 @@ function shuffle(array: Array<{ runId: string; features: number[]; label: number
  * @param params Параметры разметки (пороги эвристики). Опциональны, есть дефолты.
  * @returns      Готовый объект RouteSimilarityModel, совместимый с model.inference.ts
  */
-export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: TrainParams = {}, learningRate: number, epochs: number): RouteSimilarityModel {
+export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: TrainParams): RouteSimilarityModel {
 
 	if (calibrations.length < Number(getEnvVariable("MIN_ROUTES_TO_LEARN"))) {
 		throw new Error(`Слишком мало калибровок для обучения: ${calibrations.length} (нужно >= ${Number(getEnvVariable("MIN_ROUTES_TO_LEARN"))})`);
 	}
 	const tokenizer: H3Tokenizer = new H3Tokenizer
 
-	const minSimiliraty  = params.minRouteSimiliraty ?? 0.5
-	const minCosin = params.minCosin ?? 0.3
-	const maxLengthDiff = params.maxLengthDiffirence ?? 0.2
+	const minSimiliraty  = params.minRouteSimiliraty
+	const minCosin = params.minCosin
+	const maxLengthDiff = params.maxLengthDiffirence
 
 	// ── шаг 1: вычисление признаков + авторазметка ─────────────────────────
 	const featureRows: Array<{ runId: string; features: number[]; label: number }> = [];
@@ -137,7 +137,7 @@ export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: 
 	const valSet     = shuffledRows.slice(trainSize);
 	// ── шаг 4: обучение (SGD, 160 эпох) ─────────────────────────────────────
 	const weights = trainLogisticNeuron(
-    trainSet.map((x) => ({ features: x.features, label: x.label })), epochs, learningRate);
+    trainSet.map((x) => ({ features: x.features, label: x.label })), params.epochs, params.learningRate);
 
 	// ── шаг 5: подбор порога ─────────────────────────────────────────────────
 	// Если в validation нет ни одного label=1 (редкий класс), используем train
