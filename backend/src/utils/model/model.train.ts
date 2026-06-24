@@ -149,7 +149,7 @@ export function trainRouteSimilarityModel(calibrations: H3Trajectory[], params: 
   	const version = `trained-${new Date().toISOString().slice(0, 10)}-${Date.now().toString().slice(-5)}`;
 
   	const result = {
-		type: 'consensus_neural_filter',
+		type: 'route-similiraty-model',
 		version,
 		createdAt: new Date().toISOString().slice(0, 10),
 		threshold,
