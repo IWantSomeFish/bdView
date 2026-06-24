@@ -11,6 +11,21 @@ interface ModelEntry {
   status: 'ok' | 'failed';
 }
 
+function formatVersion(_version: string, index: number): string {
+  return `#${index + 1}`;
+}
+
+function extractError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const axiosErr = err as { response?: { data?: { error?: unknown } } };
+    const e = axiosErr.response?.data?.error;
+    if (typeof e === 'string') return e;
+    if (typeof e === 'object' && e !== null && 'message' in e) return String((e as { message: string }).message);
+  }
+  return 'Неизвестная ошибка';
+}
+
 const ModelsTab: React.FC = () => {
   const [models, setModels] = useState<ModelEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,8 +54,8 @@ const ModelsTab: React.FC = () => {
       const { data } = await apiClient.post('/models/upload', form);
       showMsg(`Загружена версия ${data.version}`);
       fetchModels();
-    } catch (err: any) {
-      showMsg(err.response?.data?.error ?? 'Ошибка загрузки модели', true);
+    } catch (err: unknown) {
+      showMsg(extractError(err), true);
     } finally {
       setLoading(false);
     }
@@ -52,12 +67,19 @@ const ModelsTab: React.FC = () => {
     try {
       const form = new FormData();
       form.append('database', file);
+      form.append('config', JSON.stringify({
+        minRouteSimiliraty: 0.7,
+        minCosin: 0.7,
+        maxLengthDiffirence: 0.3,
+        epochs: 100,
+        learningRate: 0.001,
+      }));
       const { data } = await apiClient.post('/train', form);
       const parsed = typeof data === 'string' ? JSON.parse(data) : data;
       showMsg(`Обучена версия ${parsed.version}, F1=${parsed.metrics?.f1}`);
       fetchModels();
-    } catch (err: any) {
-      showMsg(err.response?.data?.error ?? 'Ошибка обучения модели', true);
+    } catch (err: unknown) {
+      showMsg(extractError(err), true);
     } finally {
       setLoading(false);
     }
@@ -101,11 +123,11 @@ const ModelsTab: React.FC = () => {
               </td>
             </tr>
           )}
-          {models.map(m => (
+          {models.map((m, idx) => (
             <tr key={m.id}>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.name}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.description}</td>
-              <td style={{ border: '1px solid var(--border)', padding: '8px', fontFamily: 'monospace' }}>{m.version}</td>
+              <td style={{ border: '1px solid var(--border)', padding: '8px', fontFamily: 'monospace' }}>{formatVersion(m.version, idx)}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>{m.uploadedAt}</td>
               <td style={{ border: '1px solid var(--border)', padding: '8px' }}>
                 <span style={{ color: m.status === 'ok' ? '#27ae60' : '#e74c3c', fontWeight: 'bold' }}>
