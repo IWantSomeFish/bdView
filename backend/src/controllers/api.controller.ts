@@ -104,7 +104,7 @@ export class ApiController {
                     error: "database file required",
                 })
             }
-            const trainingConfig: TrainParams = parseTrainingConfig(JSON.parse(req.body.config))
+            const trainingConfig: TrainParams = parseTrainingConfig(req.body.config)
             const parsedDB = await service.getRoutes(req.file.buffer)
             const result = await service.trainModel(parsedDB,trainingConfig)
             return res.json(result)
