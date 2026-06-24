@@ -1,6 +1,6 @@
-import { getEnvVariable } from "../env.helper";
-import { H3Tokenizer } from "../trajectory/trajectory.tokenize";
-import { H3Trajectory } from "../trajectory/trajectory.types";
+import { getEnvVariable } from "../../utils/env.helper";
+import { H3Tokenizer } from "../../utils/trajectory/trajectory.tokenize";
+import { H3Trajectory } from "../../utils/trajectory/trajectory.types";
 import { createRouteFeatures } from "./model.helpers";
 import { RouteSimilarityModel, TrainParams } from "./model.types";
 

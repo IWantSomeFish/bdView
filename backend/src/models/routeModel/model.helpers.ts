@@ -1,4 +1,4 @@
-import { TokenizedTrajectory } from "../trajectory/trajectory.types";
+import { TokenizedTrajectory } from "../../utils/trajectory/trajectory.types";
 
 function lengthDiffirence(a: TokenizedTrajectory, b: TokenizedTrajectory): number {
     if (a.tokenIds.length === 0 || b.tokenIds.length === 0) {

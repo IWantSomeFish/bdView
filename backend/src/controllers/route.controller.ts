@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { saveJSON } from "../utils/helpers.saveJSON";
-import { TrainParams } from "../utils/model/model.types";
+import { TrainParams } from "../models/routeModel/model.types";
 import { parseTrainingConfig } from "../utils/configValidation.helper";
 import { service } from "./api.controller";
 

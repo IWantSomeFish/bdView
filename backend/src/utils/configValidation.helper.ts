@@ -1,4 +1,4 @@
-import { TrainParams } from "./model/model.types";
+import { TrainParams } from "../models/routeModel/model.types";
 
 export function parseTrainingConfig(value: unknown): TrainParams {
 

@@ -4,12 +4,13 @@ import { runToH3Trajectory } from "../utils/trajectory/trajectory.build";
 import { H3Trajectory } from "../utils/trajectory/trajectory.types";
 import { ParseService } from "./parse.service";
 import { Calibration, Route } from "../types/api.types";
-import { createRouteFeatures } from "../utils/model/model.helpers";
+import { createRouteFeatures } from "../models/routeModel/model.helpers";
 import { saveJSON } from "../utils/helpers.saveJSON";
-import { serializeModel, trainRouteSimilarityModel } from "../utils/model/model.train";
-import { RouteSimilarityModel, TrainParams } from "../utils/model/model.types";
-import { loadModel, predictLogistic } from "../utils/model/model.inference";
+import { serializeModel, trainRouteSimilarityModel } from "../models/routeModel/model.train";
+import { RouteSimilarityModel, TrainParams } from "../models/routeModel/model.types";
+import { loadModel, predictLogistic } from "../models/routeModel/model.inference";
 import { H3Tokenizer } from "../utils/trajectory/trajectory.tokenize";
+import { ScanRow } from "../models/wifiModel/model.train";
 
 export class MainService {
     constructor(
@@ -22,7 +23,13 @@ export class MainService {
     async getRoutes(buffer: Buffer): Promise<Route[]> {
 
         const rawDB = await this.repo.dump(buffer);
-        const result = await this.parser.parse(rawDB);
+        const result = await this.parser.parseRoutes(rawDB);
+        return result
+    }
+
+    async getScans (buffer: Buffer): Promise<ScanRow[]> {
+        const rawDB = await this.repo.dump(buffer)
+        const result = await this.parser.parseScans(rawDB)
         return result
     }
     async getSimilarRoutes(database: Route[], model: unknown) {

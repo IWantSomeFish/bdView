@@ -1,3 +1,4 @@
+import { ScanRow } from "../models/wifiModel/model.train";
 import { SqliteRepository } from "../repositories/sqlite.repository";
 import { REQUIRED_TABLES, Route } from "../types/api.types";
 
@@ -6,7 +7,24 @@ export class ParseService {
         private readonly repo = new SqliteRepository(),
     ) { }
 
-    async parse(raw: any): Promise<Route[]> {
+    async parseScans(raw: any): Promise<ScanRow[]> {
+        const tables: Record<string, unknown> = {};
+
+        for (const table of REQUIRED_TABLES) {
+            tables[table] = raw[table] ?? [];
+        }
+        const calibrations = tables.calibration_runs as any[];
+        const result: ScanRow[] = calibrations.map(x => ({
+            bssid: x.bssid,
+            signal: x.signal,
+            latitude: x.latitude,
+            longitude: x.longitude,
+            runId: x.runId,
+        
+        }));
+        return result
+    }
+    async parseRoutes(raw: any): Promise<Route[]> {
         const tables: Record<string, unknown> = {};
 
         for (const table of REQUIRED_TABLES) {
