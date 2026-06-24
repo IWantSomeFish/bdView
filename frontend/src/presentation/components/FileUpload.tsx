@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { useDatabase } from '../hooks/useDatabase';
 import DatabaseTab from './DatabaseTab';
 import ModelsTab from './ModelsTab';
+import InferencePanel from './InferencePanel';
 
-type Tab = 'database' | 'models';
+type Tab = 'database' | 'models' | 'inference';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'database', label: 'База данных' },
   { id: 'models', label: 'Модели нейросети' },
+  { id: 'inference', label: 'Инференс' },
 ];
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
@@ -49,6 +51,8 @@ const FileUpload: React.FC = () => {
       )}
 
       {tab === 'models' && <ModelsTab />}
+
+      {tab === 'inference' && <InferencePanel />}
     </div>
   );
 };

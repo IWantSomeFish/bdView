@@ -85,7 +85,7 @@ const ModelsTab: React.FC = () => {
       const form = new FormData();
       form.append('database', file);
       form.append('config', JSON.stringify(trainConfig));
-      const { data } = await apiClient.post('/train', form);
+      const { data } = await apiClient.post('/route/train', form);
       const parsed = typeof data === 'string' ? JSON.parse(data) : data;
       showMsg(`Обучена версия ${parsed.version}, F1=${parsed.metrics?.f1}`);
       fetchModels();
