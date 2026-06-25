@@ -23,37 +23,41 @@ const DatabaseTab: React.FC<Props> = ({
   const [modelFile, setModelFile] = useState<File | null>(null);
   const disabled = uploading || !backendOnline;
 
+  const cardStyle: React.CSSProperties = {
+    border: '1px solid var(--border)', borderRadius: '6px', padding: '16px',
+    flex: 1, minWidth: '280px',
+  };
+
   const btn = (color: string, dis = disabled): React.CSSProperties => ({
     padding: '10px 20px', backgroundColor: dis ? '#ccc' : color,
     color: 'white', border: 'none', borderRadius: '4px', cursor: dis ? 'not-allowed' : 'pointer',
+    width: '100%', marginTop: '10px',
   });
 
   return (
     <>
-      <h2 style={{ marginTop: 0 }}>Загрузка SQLite базы данных</h2>
+      <h2 style={{ marginTop: 0 }}>Работа с базой данных</h2>
 
       {backendOnline === false && <ErrorMessage message="Backend недоступен. Загрузка файла невозможна." />}
 
-      <DropZone accept={['.sqlite', '.db']} disabled={disabled} hint="(.sqlite, .db)" onFile={onPickFile} />
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, marginBottom: '8px' }}>Загрузка базы</h3>
+          <DropZone accept={['.sqlite', '.db']} disabled={disabled} hint="(.sqlite, .db)" onFile={onPickFile} />
+          <button onClick={onUpload} disabled={disabled} style={btn('#007bff')}>
+            {uploading ? 'Загрузка...' : 'Показать маршруты'}
+          </button>
+        </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        <button onClick={onUpload} disabled={disabled} style={btn('#007bff')}>
-          {uploading ? 'Загрузка...' : 'Загрузить базу данных'}
-        </button>
-
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <DropZone
-            accept={['.json']}
-            disabled={disabled}
-            hint="модель (.json)"
-            onFile={setModelFile}
-          />
+        <div style={cardStyle}>
+          <h3 style={{ marginTop: 0, marginBottom: '8px' }}>Анализ похожих</h3>
+          <DropZone accept={['.json']} disabled={disabled} hint="Модель (.json)" onFile={setModelFile} />
           <button
             onClick={() => modelFile && onSimilar(modelFile)}
             disabled={disabled || !modelFile}
             style={btn('#8e44ad', disabled || !modelFile)}
           >
-            {uploading ? 'Анализ...' : 'Анализ похожих'}
+            {uploading ? 'Анализ...' : 'Запустить анализ'}
           </button>
         </div>
       </div>
