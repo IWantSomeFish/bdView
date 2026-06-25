@@ -21,14 +21,15 @@ const ModelTypeSelector: React.FC<Props> = ({ value, onChange }) => (
           flex: 1, padding: '12px', border: '2px solid',
           borderColor: value === opt.type ? '#007bff' : 'var(--border)',
           borderRadius: '6px', cursor: 'pointer',
-          background: value === opt.type ? '#e3f2fd' : 'transparent',
+          background: value === opt.type ? '#007bff' : 'transparent',
+          color: value === opt.type ? 'white' : 'var(--text)',
           textAlign: 'left',
         }}
       >
         <div style={{ fontWeight: value === opt.type ? 'bold' : 'normal', marginBottom: '4px' }}>
           {opt.label}
         </div>
-        <div style={{ fontSize: '12px', color: '#666' }}>{opt.description}</div>
+        <div style={{ fontSize: '12px', opacity: 0.8 }}>{opt.description}</div>
       </button>
     ))}
   </div>

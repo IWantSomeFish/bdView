@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../infrastructure/http/apiClient';
 import DropZone from './DropZone';
 
+type ModelType = 'route' | 'wifi';
+
 interface ModelEntry {
   id: string;
   name: string;
@@ -27,6 +29,18 @@ const DEFAULT_TRAIN_CONFIG: TrainConfig = {
   learningRate: 0.001,
 };
 
+interface WifiTrainConfig {
+  minAppearanceFreq: number;
+  maxVariance: number;
+  minSpatialConsistency: number;
+}
+
+const DEFAULT_WIFI_CONFIG: WifiTrainConfig = {
+  minAppearanceFreq: 0.5,
+  maxVariance: 120,
+  minSpatialConsistency: 0.35,
+};
+
 function formatVersion(_version: string, index: number): string {
   return `#${index + 1}`;
 }
@@ -48,6 +62,9 @@ const ModelsTab: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [trainConfig, setTrainConfig] = useState<TrainConfig>(DEFAULT_TRAIN_CONFIG);
+  const [wifiConfig, setWifiConfig] = useState<WifiTrainConfig>(DEFAULT_WIFI_CONFIG);
+  const [modelType, setModelType] = useState<ModelType>('route');
+  const [dbFile, setDbFile] = useState<File | null>(null);
 
   const fetchModels = async () => {
     try {
@@ -78,16 +95,23 @@ const ModelsTab: React.FC = () => {
     }
   };
 
-  const handleTrain = async (file: File) => {
+  const handleTrain = async () => {
+    if (!dbFile) return;
     setLoading(true);
     setMessage(null);
     try {
       const form = new FormData();
-      form.append('database', file);
-      form.append('config', JSON.stringify(trainConfig));
-      const { data } = await apiClient.post('/route/train', form);
+      form.append('database', dbFile);
+      if (modelType === 'route') {
+        form.append('config', JSON.stringify(trainConfig));
+      } else {
+        form.append('config', JSON.stringify(wifiConfig));
+      }
+      const endpoint = modelType === 'route' ? '/route/train' : '/wifi/train';
+      const { data } = await apiClient.post(endpoint, form);
       const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-      showMsg(`Обучена версия ${parsed.version}, F1=${parsed.metrics?.f1}`);
+      const label = modelType === 'route' ? 'Модель маршрутов' : 'Wi-Fi модель';
+      showMsg(`${label} обучена, версия ${parsed.version}, F1=${parsed.metrics?.f1}`);
       fetchModels();
     } catch (err: unknown) {
       showMsg(extractError(err), true);
@@ -96,6 +120,9 @@ const ModelsTab: React.FC = () => {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    padding: '6px', border: '1px solid var(--border)', borderRadius: '4px',
+  };
 
   return (
     <>
@@ -108,45 +135,119 @@ const ModelsTab: React.FC = () => {
       )}
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', marginBottom: '16px' }}>
-        <h3 style={{ marginTop: 0 }}>Обучить модель на своей БД</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px', fontSize: '14px' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Схожесть маршрутов (0..1)</span>
-            <input type="number" step="0.05" min="0" max="1"
-              value={trainConfig.minRouteSimiliraty}
-              onChange={e => setTrainConfig(c => ({ ...c, minRouteSimiliraty: +e.target.value }))}
-              style={{ padding: '6px', border: '1px solid var(--border)', borderRadius: '4px' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Косинусное сходство (0..1)</span>
-            <input type="number" step="0.05" min="0" max="1"
-              value={trainConfig.minCosin}
-              onChange={e => setTrainConfig(c => ({ ...c, minCosin: +e.target.value }))}
-              style={{ padding: '6px', border: '1px solid var(--border)', borderRadius: '4px' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Разница длин (0..1)</span>
-            <input type="number" step="0.05" min="0" max="1"
-              value={trainConfig.maxLengthDiffirence}
-              onChange={e => setTrainConfig(c => ({ ...c, maxLengthDiffirence: +e.target.value }))}
-              style={{ padding: '6px', border: '1px solid var(--border)', borderRadius: '4px' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Эпохи</span>
-            <input type="number" step="10" min="10" max="500"
-              value={trainConfig.epochs}
-              onChange={e => setTrainConfig(c => ({ ...c, epochs: +e.target.value }))}
-              style={{ padding: '6px', border: '1px solid var(--border)', borderRadius: '4px' }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Learning Rate</span>
-            <input type="number" step="0.001" min="0.001" max="1"
-              value={trainConfig.learningRate}
-              onChange={e => setTrainConfig(c => ({ ...c, learningRate: +e.target.value }))}
-              style={{ padding: '6px', border: '1px solid var(--border)', borderRadius: '4px' }} />
-          </label>
+        <h3 style={{ marginTop: 0 }}>Обучить модель</h3>
+
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <button
+            onClick={() => setModelType('route')}
+            style={{
+              padding: '8px 16px', border: '2px solid', borderRadius: '4px', cursor: 'pointer',
+              borderColor: modelType === 'route' ? '#007bff' : 'var(--border)',
+              background: modelType === 'route' ? '#007bff' : 'transparent',
+              color: modelType === 'route' ? 'white' : 'var(--text)',
+              fontWeight: modelType === 'route' ? 'bold' : 'normal',
+            }}
+          >
+            Маршруты
+          </button>
+          <button
+            onClick={() => setModelType('wifi')}
+            style={{
+              padding: '8px 16px', border: '2px solid', borderRadius: '4px', cursor: 'pointer',
+              borderColor: modelType === 'wifi' ? '#007bff' : 'var(--border)',
+              background: modelType === 'wifi' ? '#007bff' : 'transparent',
+              color: modelType === 'wifi' ? 'white' : 'var(--text)',
+              fontWeight: modelType === 'wifi' ? 'bold' : 'normal',
+            }}
+          >
+            Wi-Fi
+          </button>
         </div>
-        <DropZone accept={['.db', '.sqlite']} disabled={loading} hint="(.db, .sqlite) — модель обучится и сохранится автоматически" onFile={handleTrain} />
+
+        {modelType === 'route' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px', fontSize: '14px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Схожесть маршрутов (0..1)</span>
+              <input type="number" step="0.05" min="0" max="1"
+                value={trainConfig.minRouteSimiliraty}
+                onChange={e => setTrainConfig(c => ({ ...c, minRouteSimiliraty: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Косинусное сходство (0..1)</span>
+              <input type="number" step="0.05" min="0" max="1"
+                value={trainConfig.minCosin}
+                onChange={e => setTrainConfig(c => ({ ...c, minCosin: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Разница длин (0..1)</span>
+              <input type="number" step="0.05" min="0" max="1"
+                value={trainConfig.maxLengthDiffirence}
+                onChange={e => setTrainConfig(c => ({ ...c, maxLengthDiffirence: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Эпохи</span>
+              <input type="number" step="10" min="10" max="500"
+                value={trainConfig.epochs}
+                onChange={e => setTrainConfig(c => ({ ...c, epochs: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Learning Rate</span>
+              <input type="number" step="0.001" min="0.001" max="1"
+                value={trainConfig.learningRate}
+                onChange={e => setTrainConfig(c => ({ ...c, learningRate: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+          </div>
+        )}
+
+        {modelType === 'wifi' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px', fontSize: '14px' }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Частота появления (0..1)</span>
+              <input type="number" step="0.05" min="0" max="1"
+                value={wifiConfig.minAppearanceFreq}
+                onChange={e => setWifiConfig(c => ({ ...c, minAppearanceFreq: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Макс. дисперсия (0..200)</span>
+              <input type="number" step="10" min="0" max="200"
+                value={wifiConfig.maxVariance}
+                onChange={e => setWifiConfig(c => ({ ...c, maxVariance: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <span>Пространственная консистентность (0..1)</span>
+              <input type="number" step="0.05" min="0" max="1"
+                value={wifiConfig.minSpatialConsistency}
+                onChange={e => setWifiConfig(c => ({ ...c, minSpatialConsistency: +e.target.value }))}
+                style={inputStyle} />
+            </label>
+          </div>
+        )}
+
+        <DropZone accept={['.db', '.sqlite']} disabled={loading} hint="(.db, .sqlite)" onFile={setDbFile} />
+
+        {dbFile && (
+          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '14px', color: '#27ae60' }}>{dbFile.name}</span>
+            <button
+              onClick={handleTrain}
+              disabled={loading}
+              style={{
+                padding: '10px 24px', backgroundColor: loading ? '#ccc' : '#007bff',
+                color: 'white', border: 'none', borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Обучение...' : 'Обучить'}
+            </button>
+          </div>
+        )}
       </div>
 
       <div style={{ border: '1px solid var(--border)', borderRadius: '6px', padding: '16px', marginBottom: '24px' }}>
